@@ -40,3 +40,5 @@ class ProductReviewLoader(ItemLoader):
     default_output_processor = TakeFirst()
 
     date_in = MapCompose(lambda date: date.strftime("%Y-%m-%d"))
+    stars_in = MapCompose(int)
+    max_stars_in = MapCompose(int)
