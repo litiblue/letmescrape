@@ -15,3 +15,14 @@ NEWSPIDER_MODULE = 'letmescrape.spiders'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'letmescrape (+http://www.yourdomain.com)'
+
+
+########## ScrapyJS CONFIGURATION
+# See : https://github.com/scrapinghub/scrapyjs
+SPLASH_URL = 'http://192.168.59.103:8050'
+DOWNLOADER_MIDDLEWARES = {
+    'scrapyjs.SplashMiddleware': 725,
+}
+DUPEFILTER_CLASS = 'scrapyjs.SplashAwareDupeFilter'
+HTTPCACHE_STORAGE = 'scrapyjs.SplashAwareFSCacheStorage'
+########## END ScrapyJS CONFIGURATION
