@@ -29,6 +29,17 @@ https://splash.readthedocs.org/ 참고
 
 Tests
 =============================
-py.test 명령으로 테스트를 수행합니다.
+Test::
+
+    $ py.test
+
+Test with coverage::
+
+    $ py.test --cov letmescrape tests/
+
+Test with coverage reporting::
+
+    $ py.test --cov letmescrape tests/ --cov-report html
+
 import error가 발생할 경우 pip install -e . 명령을 수행해줍니다.
 http://pytest.org/latest/goodpractises.html#choosing-a-test-layout-import-rules 참고

@@ -1,2 +1,4 @@
 *.pyc
 letmescrape.egg-info
+.coverage
+htmlcov
