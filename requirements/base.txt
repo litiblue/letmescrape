@@ -1,0 +1,6 @@
+# About specifying a version range of a package: http://groups.google.com/group/python-virtualenv/msg/07d88e8408fd86d7
+
+Scrapy>=0.24.6,<0.24.99
+scrapyjs>=0.1.1,<0.1.99
+service_identity
+html2text
