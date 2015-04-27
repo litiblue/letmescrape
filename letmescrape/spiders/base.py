@@ -6,11 +6,15 @@ from letmescrape.loaders import ProductLoader
 class LMSpider(scrapy.Spider):
     default_values = {}
 
-    def __init__(self, start_url, site_category_id, job_id, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(LMSpider, self).__init__(*args, **kwargs)
-        self.start_urls = [start_url]
-        self.site_category_id = site_category_id
-        self.job_id = job_id
+
+        start_url = kwargs.get('start_url', False)
+        if start_url:
+            self.start_urls = [start_url]
+
+        self.site_category_id = kwargs.get('site_category_id', None)
+        self.job_id = kwargs.get('job_id', None)
 
     def _get_product_item_loader_with_default_values(self, response):
         loader = ProductLoader(response=response)

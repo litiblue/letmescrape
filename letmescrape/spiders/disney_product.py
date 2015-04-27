@@ -23,40 +23,47 @@ class DisneyProductSpider(LMSpider):
         'colors': None
     }
 
-    def _construct_json_request(self, N, num_items=10000, start=0):
-        url = "http://www.disneystore.com/disney/store/DSIProcessWidget?storeId=10051&templateId=Width-3_4-ProductList&" \
-              "N=%s&navNum=%s&Nao=%s" % (N, num_items, start)
-        return Request(url, callback=self.parse_json)
+    def get_ajax_url_for_list(self, url, num_items=10000, start=0):
+        m = re.search(r'/mn/(\d(\+?\d)*)/', url)
+        N = m.group(1)
+
+        ajax_url = "http://www.disneystore.com/disney/store/DSIProcessWidget?storeId=10051&templateId=Width-3_4-ProductList&" \
+                   "N=%s&navNum=%s&Nao=%s" % (N, num_items, start)
+        return ajax_url
 
     def start_requests(self):
         for url in self.start_urls:
-            m = re.search(r'/mn/(\d(\+?\d)*)/', url)
-            N = m.group(1)
-            yield self._construct_json_request(N)
+            ajax_url = self.get_ajax_url_for_list(url)
+            yield Request(ajax_url, callback=self.parse_list)
 
-    def _check_scrapable(self, item):
+    def check_scrapable(self, item):
         return item['isCollection'] == 'false' and 'Create Your Own' not in item['title']
 
-    def parse_json(self, response):
+    def extract_values_from_list(self, item, response):
+        url = get_absolute_url(response, item['link'])
+        list_images = item.get('imageUrl', None)
+        product_number = item.get('productId')
+
+        return {
+            'url': url,
+            'list_images': list_images,
+            'product_number': product_number
+        }
+
+    def parse_list(self, response):
         data = json.loads(response.body)
         for item in data['items']:
-            if self._check_scrapable(item):
-                url = get_absolute_url(response, item['link'])
-                list_images = item.get('imageUrl', None)
-                product_number = item.get('productId')
+            if self.check_scrapable(item):
+                values_from_list = self.extract_values_from_list(item, response)
 
-                request = Request(url, callback=self.parse_item, meta={
+                request = Request(values_from_list['url'], callback=self.parse_item, meta={
                     'splash': {
                         'endpoint': 'render.html',
                         'args': {'wait': '1.0'}
                     }
                 })
 
-                request.meta['values_from_list'] = {
-                    'url': url,
-                    'list_images': list_images,
-                    'product_number': product_number
-                }
+                request.meta['values_from_list'] = values_from_list
                 yield request
 
     def parse_item(self, response):
