@@ -38,3 +38,5 @@ class ProductColorLoader(ItemLoader):
 class ProductReviewLoader(ItemLoader):
     default_item_class = ProductReviewItem
     default_output_processor = TakeFirst()
+
+    date_in = MapCompose(lambda date: date.strftime("%Y-%m-%d"))

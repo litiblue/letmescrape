@@ -9,6 +9,7 @@ from base import LMSpider
 from letmescrape.utils import get_absolute_url
 from letmescrape.loaders import ProductImageLoader, ProductReviewLoader
 
+from datetime import datetime
 
 class DisneyProductSpider(LMSpider):
     name = "disney_product"
@@ -95,7 +96,8 @@ class DisneyProductSpider(LMSpider):
             review_loader = ProductReviewLoader(response=response, selector=selector)
             review_loader.add_css('author', '.BVRRReviewDisplayStyle5BodyUser .BVRRNickname::text')
             review_loader.add_css('title', '.BVRRReviewDisplayStyle5Header .BVRRReviewTitle::text')
-            review_loader.add_css('date', '.BVRRReviewDisplayStyle5Header .BVRRReviewDate::text')
+            review_loader.add_css('date', '.BVRRReviewDisplayStyle5Header .BVRRReviewDate::text',
+                                  MapCompose(lambda date: datetime.strptime(date, '%B %d, %Y').date()))
             review_loader.add_css('body', '.BVRRReviewDisplayStyle5BodyContent .BVRRReviewText::text')
             review_loader.add_css('max_stars', '.BVRRReviewDisplayStyle5Header .BVRRRating img::attr(title)',
                                   re=r'^\s*\d\s*/\s*(\d)\s*$')
