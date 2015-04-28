@@ -47,3 +47,9 @@ class ProductReviewItem(scrapy.Item):
     url = scrapy.Field()
     stars = scrapy.Field()
     max_stars = scrapy.Field()
+
+
+class CategoryItem(scrapy.Item):
+    title = scrapy.Field(required=True)
+    link = scrapy.Field()
+    sub_categories = scrapy.Field()

@@ -2,7 +2,7 @@ from scrapy.contrib.loader import ItemLoader
 from scrapy.contrib.loader.processor import *
 
 from items import *
-from letmescrape.processors import extract_price, html2text
+from letmescrape.processors import extract_price, html2text, get_absolute_url
 
 
 class ProductLoader(ItemLoader):
@@ -42,3 +42,14 @@ class ProductReviewLoader(ItemLoader):
     date_in = MapCompose(lambda date: date.strftime("%Y-%m-%d"))
     stars_in = MapCompose(int)
     max_stars_in = MapCompose(int)
+
+
+class CategoryLoader(ItemLoader):
+    default_item_class = CategoryItem
+    default_output_processor = TakeFirst()
+
+    title_in = MapCompose(unicode.strip)
+    link_in = MapCompose(get_absolute_url)
+
+    sub_categories_in = MapCompose(dict)
+    sub_categories_out = Identity()

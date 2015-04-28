@@ -25,3 +25,7 @@ class ProductSpider(scrapy.Spider):
             loader.add_value(key, value)
 
         return loader
+
+
+class CategorySpider(scrapy.Spider):
+    pass
