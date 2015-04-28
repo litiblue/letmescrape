@@ -16,6 +16,10 @@ NEWSPIDER_MODULE = 'letmescrape.spiders'
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'letmescrape (+http://www.yourdomain.com)'
 
+ITEM_PIPELINES = {
+    'letmescrape.pipelines.RequiredFieldsPipeline': 300,
+}
+
 
 ########## ScrapyJS CONFIGURATION
 # See : https://github.com/scrapinghub/scrapyjs
