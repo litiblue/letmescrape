@@ -7,49 +7,51 @@
 
 import scrapy
 
+from letmescrape.fields import SingleItemField, CharField, NumberField, UrlField, DateField, ArrayField
+
 
 class ProductItem(scrapy.Item):
-    site_category_id = scrapy.Field(required=True)
-    job_id = scrapy.Field(required=True)
-    url = scrapy.Field(required=True)
-    product_number = scrapy.Field(required=True)
-    title = scrapy.Field(required=True)
-    brand = scrapy.Field(required=True)
-    sub_brand = scrapy.Field()
-    description = scrapy.Field()
-    list_images = scrapy.Field()
-    original_price = scrapy.Field()
-    sale_price = scrapy.Field(required=True)
-    sizes = scrapy.Field()
-    default_color = scrapy.Field()
+    site_category_id = SingleItemField(required=True)
+    job_id = SingleItemField(required=True)
+    url = UrlField(required=True)
+    product_number = CharField(required=True)
+    title = CharField(required=True)
+    brand = CharField(required=True)
+    sub_brand = CharField()
+    description = CharField(required=True)
+    list_images = ArrayField(UrlField)
+    original_price = NumberField()
+    sale_price = NumberField(required=True)
+    sizes = ArrayField(CharField)
+    default_color = CharField()
 
-    images = scrapy.Field(required=True)
-    colors = scrapy.Field()
-    reviews = scrapy.Field()
+    images = ArrayField(scrapy.Item, required=True)
+    colors = ArrayField(scrapy.Item)
+    reviews = ArrayField(scrapy.Item)
 
 
 class ProductImageItem(scrapy.Item):
-    thumbnail = scrapy.Field()
-    normal_size = scrapy.Field(required=True)
-    zoomed = scrapy.Field()
+    thumbnail = UrlField()
+    normal_size = UrlField(required=True)
+    zoomed = UrlField()
 
 
 class ProductColorItem(scrapy.Item):
-    name = scrapy.Field(required=True)
-    swatch_image = scrapy.Field()
+    name = CharField(required=True)
+    swatch_image = UrlField()
 
 
 class ProductReviewItem(scrapy.Item):
-    author = scrapy.Field()
-    title = scrapy.Field()
-    date = scrapy.Field()
-    body = scrapy.Field(required=True)
-    url = scrapy.Field()
-    stars = scrapy.Field()
-    max_stars = scrapy.Field()
+    author = CharField()
+    title = CharField()
+    date = DateField()
+    body = CharField(required=True)
+    url = UrlField()
+    stars = NumberField()
+    max_stars = NumberField()
 
 
 class CategoryItem(scrapy.Item):
-    title = scrapy.Field(required=True)
-    link = scrapy.Field()
-    sub_categories = scrapy.Field()
+    title = CharField(required=True)
+    link = UrlField()
+    sub_categories = ArrayField(scrapy.Item)

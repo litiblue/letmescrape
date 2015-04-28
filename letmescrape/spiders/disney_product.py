@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 import json
 import re
-from datetime import datetime
 
 from scrapy import Request
 from scrapy.contrib.loader.processor import MapCompose
 
 from base import ProductSpider
-from letmescrape.utils import get_absolute_url
 from letmescrape.loaders import ProductImageLoader, ProductReviewLoader
+from letmescrape.processors import Date
+from letmescrape.utils import get_absolute_url
 
 
 class DisneyProductSpider(ProductSpider):
@@ -41,7 +41,7 @@ class DisneyProductSpider(ProductSpider):
         return item['isCollection'] == 'false' and 'Create Your Own' not in item['title']
 
     def extract_values_from_list(self, item, response):
-        url = get_absolute_url(response, item['link'])
+        url = item['link']
         list_images = item.get('imageUrl', None)
         product_number = item.get('productId')
 
@@ -55,9 +55,10 @@ class DisneyProductSpider(ProductSpider):
         data = json.loads(response.body)
         for item in data['items']:
             if self.check_scrapable(item):
+                url = get_absolute_url(response, item['link'])
                 values_from_list = self.extract_values_from_list(item, response)
 
-                request = Request(values_from_list['url'], callback=self.parse_item, meta={
+                request = Request(url, callback=self.parse_item, meta={
                     'splash': {
                         'endpoint': 'render.html',
                         'args': {'wait': '1.0'}
@@ -97,7 +98,7 @@ class DisneyProductSpider(ProductSpider):
             review_loader.add_css('author', '.BVRRReviewDisplayStyle5BodyUser .BVRRNickname::text')
             review_loader.add_css('title', '.BVRRReviewDisplayStyle5Header .BVRRReviewTitle::text')
             review_loader.add_css('date', '.BVRRReviewDisplayStyle5Header .BVRRReviewDate::text',
-                                  MapCompose(lambda date: datetime.strptime(date, '%B %d, %Y').date()))
+                                  MapCompose(Date('%B %d, %Y')))
             review_loader.add_css('body', '.BVRRReviewDisplayStyle5BodyContent .BVRRReviewText::text')
             review_loader.add_css('max_stars', '.BVRRReviewDisplayStyle5Header .BVRRRating img::attr(title)',
                                   re=r'^\s*\d\s*/\s*(\d)\s*$')

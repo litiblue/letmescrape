@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from base import CategorySpider
 from letmescrape.loaders import CategoryLoader
+from letmescrape.processors import JoinExcludingEmptyValues
 
 
 class DisneyCategorySpider(CategorySpider):
@@ -13,6 +14,7 @@ class DisneyCategorySpider(CategorySpider):
     def parse(self, response):
         def _generate_loader(selector):
             loader = CategoryLoader(selector=selector, response=response)
+            loader.title_out = JoinExcludingEmptyValues(' ')
             loader.add_xpath('title', 'text()')
             loader.add_xpath('title', 'a/text()')
             loader.add_xpath('link', '@href')
