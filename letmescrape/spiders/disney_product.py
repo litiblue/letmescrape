@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import re
+from datetime import datetime
 
 from scrapy import Request
 from scrapy.contrib.loader.processor import MapCompose
@@ -9,7 +10,6 @@ from base import LMSpider
 from letmescrape.utils import get_absolute_url
 from letmescrape.loaders import ProductImageLoader, ProductReviewLoader
 
-from datetime import datetime
 
 class DisneyProductSpider(LMSpider):
     name = "disney_product"
