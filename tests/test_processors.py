@@ -1,3 +1,5 @@
+from scrapy.http import HtmlResponse
+
 from letmescrape.processors import *
 
 
@@ -15,3 +17,11 @@ def test_extract_price():
 
 def test_html2text():
     assert html2text('<html> hello world! </html>').strip() == 'hello world!'
+
+
+def test_get_absolute_url():
+    base_url, relative_url = 'http://www.test.com', 'path/to/resource'
+    absolute_url = base_url + '/' + relative_url
+    response = HtmlResponse(base_url)
+
+    assert get_absolute_url(relative_url, {'response': response}) == absolute_url
