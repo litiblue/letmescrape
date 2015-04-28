@@ -6,12 +6,12 @@ from datetime import datetime
 from scrapy import Request
 from scrapy.contrib.loader.processor import MapCompose
 
-from base import LMSpider
+from base import ProductSpider
 from letmescrape.utils import get_absolute_url
 from letmescrape.loaders import ProductImageLoader, ProductReviewLoader
 
 
-class DisneyProductSpider(LMSpider):
+class DisneyProductSpider(ProductSpider):
     name = "disney_product"
     allowed_domains = ["disneystore.com"]
     start_urls = (

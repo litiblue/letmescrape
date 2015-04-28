@@ -3,11 +3,11 @@ import scrapy
 from letmescrape.loaders import ProductLoader
 
 
-class LMSpider(scrapy.Spider):
+class ProductSpider(scrapy.Spider):
     default_values = {}
 
     def __init__(self, *args, **kwargs):
-        super(LMSpider, self).__init__(*args, **kwargs)
+        super(ProductSpider, self).__init__(*args, **kwargs)
 
         start_url = kwargs.get('start_url', False)
         if start_url:

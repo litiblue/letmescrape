@@ -1,4 +1,4 @@
-from letmescrape.spiders.base import LMSpider
+from letmescrape.spiders.base import ProductSpider
 
 
 def test_get_product_item_loader_with_default_values():
@@ -8,7 +8,7 @@ def test_get_product_item_loader_with_default_values():
     test_key = 'title'
     test_value = 'value'
 
-    spider = LMSpider(name='default', start_url=start_url, site_category_id=site_category_id, job_id=job_id)
+    spider = ProductSpider(name='default', start_url=start_url, site_category_id=site_category_id, job_id=job_id)
     spider.default_values = {
         test_key: test_value
     }
