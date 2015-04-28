@@ -16,7 +16,7 @@ class LMSpider(scrapy.Spider):
         self.site_category_id = kwargs.get('site_category_id', None)
         self.job_id = kwargs.get('job_id', None)
 
-    def _get_product_item_loader_with_default_values(self, response):
+    def get_product_item_loader_with_default_values(self, response):
         loader = ProductLoader(response=response)
         loader.add_value('site_category_id', self.site_category_id)
         loader.add_value('job_id', self.job_id)

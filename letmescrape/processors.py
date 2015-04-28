@@ -4,7 +4,7 @@ import html2text as __html2text
 
 
 def extract_price(text):
-    result = re.search(r'\$(\d+\.\d\d)', text)
+    result = re.search(r'\$(\d+(\.\d(\d)?)?)', text)
     if result:
         value = result.group(1)
         return float(value)

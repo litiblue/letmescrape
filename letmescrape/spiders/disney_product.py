@@ -68,7 +68,7 @@ class DisneyProductSpider(LMSpider):
                 yield request
 
     def parse_item(self, response):
-        loader = self._get_product_item_loader_with_default_values(response)
+        loader = self.get_product_item_loader_with_default_values(response)
 
         values_from_list = response.meta.get('values_from_list', {})
         for key, value in values_from_list.iteritems():
