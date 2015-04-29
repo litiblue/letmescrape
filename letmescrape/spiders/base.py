@@ -28,4 +28,7 @@ class ProductSpider(scrapy.Spider):
 
 
 class CategorySpider(scrapy.Spider):
-    pass
+    def __init__(self, *args, **kwargs):
+        super(CategorySpider, self).__init__(*args, **kwargs)
+
+        self.site_id = kwargs.get('site_id', None)
