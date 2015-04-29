@@ -4,3 +4,4 @@ Scrapy>=0.24.6,<0.24.99
 scrapyjs>=0.1.1,<0.1.99
 service_identity
 html2text
+requests

@@ -7,6 +7,7 @@
 #
 #     http://doc.scrapy.org/en/latest/topics/settings.html
 #
+from os import environ
 
 BOT_NAME = 'letmescrape'
 
@@ -18,6 +19,7 @@ NEWSPIDER_MODULE = 'letmescrape.spiders'
 
 ITEM_PIPELINES = {
     'letmescrape.pipelines.RequiredFieldsPipeline': 300,
+    'letmescrape.pipelines.LetMeShopApiPipeline': 1000
 }
 
 
@@ -30,3 +32,14 @@ DOWNLOADER_MIDDLEWARES = {
 DUPEFILTER_CLASS = 'scrapyjs.SplashAwareDupeFilter'
 HTTPCACHE_STORAGE = 'scrapyjs.SplashAwareFSCacheStorage'
 ########## END ScrapyJS CONFIGURATION
+
+
+########## LetMeShop Api CONFIGURATION
+_add_trailing_url = lambda url: url + '/' if url and not url.endswith('/') else url
+
+LETMESHOP_API_PIPELINE_ENABLED = False
+LETMESHOP_API_BASE_URL = _add_trailing_url(environ.get('LETMESHOP_API_AUTH_TOKEN', ''))
+LETMESHOP_API_AUTH_TOKEN = environ.get('LETMESHOP_API_AUTH_TOKEN', '')
+########## END LetMeShop Api CONFIGURATION
+
+CONCURRENT_REQUESTS = 1
