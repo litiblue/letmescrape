@@ -16,7 +16,8 @@ class DisneyCategorySpider(CategorySpider):
             loader = CategoryLoader(selector=selector, response=response)
             loader.title_out = JoinExcludingEmptyValues(' ')
             loader.add_xpath('title', 'text()')
-            loader.add_xpath('title', 'a/text()')
+            loader.add_xpath('title', 'font/text()')
+            loader.add_xpath('title', 'a//text()')
             loader.add_xpath('link', '@href')
             loader.add_xpath('link', 'a/@href')
             return loader
