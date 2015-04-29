@@ -51,11 +51,11 @@ class ArrayField(PredefinedField):
     }
 
     def __init__(self, field_or_item, **kwargs):
-        if isinstance(field_or_item, scrapy.Item):
+        if issubclass(field_or_item, scrapy.Item):
             defaults = {
                 'input_processor': MapCompose(dict)
             }
-        elif isinstance(field_or_item, PredefinedField):
+        elif issubclass(field_or_item, PredefinedField):
             defaults = field_or_item.defaults.copy()
         else:
             defaults = {}
