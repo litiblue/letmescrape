@@ -1,4 +1,4 @@
-from scrapy.http import HtmlResponse
+from scrapy.http import HtmlResponse, Request
 
 from letmescrape.processors import *
 
@@ -22,6 +22,6 @@ def test_html2text():
 def test_get_absolute_url():
     base_url, relative_url = 'http://www.test.com', 'path/to/resource'
     absolute_url = base_url + '/' + relative_url
-    response = HtmlResponse(base_url)
+    response = HtmlResponse(base_url, request=Request(base_url))
 
     assert get_absolute_url(relative_url, {'response': response}) == absolute_url
