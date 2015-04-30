@@ -19,9 +19,6 @@ class DisneyProductSpider(ProductSpider):
     )
     default_values = {
         'brand': 'disney',
-        'sub_brand': None,
-        'default_color': None,
-        'colors': None
     }
 
     def get_ajax_url_for_list(self, url, num_items=10000, start=0):

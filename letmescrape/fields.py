@@ -20,7 +20,8 @@ class SingleItemField(PredefinedField):
 class CharField(PredefinedField):
     defaults = {
         'input_processor': MapCompose(lambda chars: chars.strip()),
-        'output_processor': SingleValue()
+        'output_processor': SingleValue(),
+        'default_value': ''
     }
 
 
@@ -47,7 +48,8 @@ class UrlField(PredefinedField):
 
 class ArrayField(PredefinedField):
     defaults = {
-        'output_processor': Identity()
+        'output_processor': Identity(),
+        'default_value': []
     }
 
     def __init__(self, field_or_item, **kwargs):
