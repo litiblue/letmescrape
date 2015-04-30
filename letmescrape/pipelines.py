@@ -10,6 +10,19 @@ from scrapy import signals
 
 from letmescrape.spiders.base import ProductSpider, CategorySpider
 from letmescrape.exports import LetMeShopApiCategoriesExporter, LetMeShopApiProductExporter
+from letmescrape.items import ProductItem
+
+
+class PricePipeline(object):
+    def process_item(self, item, spider=None):
+        if isinstance(item, ProductItem):
+            if item.get('original_price', None) is None:
+                item['original_price'] = item['sale_price']
+
+            if item['sale_price'] > item['original_price']:
+                raise DropItem("sale price should not be greater then original price")
+
+        return item
 
 
 class RequiredFieldsPipeline(object):

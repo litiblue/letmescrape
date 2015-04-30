@@ -18,6 +18,7 @@ NEWSPIDER_MODULE = 'letmescrape.spiders'
 #USER_AGENT = 'letmescrape (+http://www.yourdomain.com)'
 
 ITEM_PIPELINES = {
+    'letmescrape.pipelines.PricePipeline': 250,
     'letmescrape.pipelines.RequiredFieldsPipeline': 300,
     'letmescrape.pipelines.LetMeShopApiPipeline': 1000
 }
