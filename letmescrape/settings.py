@@ -38,7 +38,7 @@ HTTPCACHE_STORAGE = 'scrapyjs.SplashAwareFSCacheStorage'
 _add_trailing_url = lambda url: url + '/' if url and not url.endswith('/') else url
 
 LETMESHOP_API_PIPELINE_ENABLED = False
-LETMESHOP_API_BASE_URL = _add_trailing_url(environ.get('LETMESHOP_API_AUTH_TOKEN', ''))
+LETMESHOP_API_BASE_URL = _add_trailing_url(environ.get('LETMESHOP_API_BASE_URL', ''))
 LETMESHOP_API_AUTH_TOKEN = environ.get('LETMESHOP_API_AUTH_TOKEN', '')
 ########## END LetMeShop Api CONFIGURATION
 
