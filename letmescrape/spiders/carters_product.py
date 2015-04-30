@@ -2,9 +2,13 @@
 import re
 
 from scrapy import Request
+from scrapy.contrib.loader.processor import MapCompose
 
+from letmescrape.processors import JoinExcludingEmptyValues
 from base import ProductSpider
-from letmescrape.loaders import ProductImageLoader, ProductColorLoader
+from letmescrape.loaders import ProductImageLoader, ProductColorLoader, ProductReviewLoader
+
+from letmescrape.processors import Date
 
 
 class CartersProductSpider(ProductSpider):
@@ -46,7 +50,13 @@ class CartersProductSpider(ProductSpider):
     def parse_list(self, response):
         for item_sel in response.xpath('//div[@class="search-result-content"]/ul[@id="search-result-items"]/li[@class="grid-tile"]'):
             values_from_list = self.extract_values_from_list(item_sel, response)
-            request = Request(values_from_list['url'], callback=self.parse_item)
+            request = Request(values_from_list['url'], callback=self.parse_item, meta={
+                'splash': {
+                    'endpoint': 'render.html',
+                    'args': {'wait': '1.0'}
+                }
+            })
+
             request.meta['values_from_list'] = values_from_list
             yield request
 
@@ -79,5 +89,20 @@ class CartersProductSpider(ProductSpider):
             image_loader.add_xpath('normal_size', 'a//img[@class="primary-image"]/@src')
             image_loader.add_xpath('zoomed', 'a/@href')
             loader.add_value('images', image_loader.load_item())
+
+        #reviews
+        for selector in response.xpath('//div[@id="BVReviewsContainer"]//div[contains(@class,"BVRRContentReview")]'):
+            review_loader = ProductReviewLoader(response=response, selector=selector)
+            review_loader.body_out = JoinExcludingEmptyValues('\n')
+            review_loader.add_css('author', '.BVRRReviewDisplayStyle5BodyUser .BVRRNickname::text')
+            review_loader.add_css('title', '.BVRRReviewDisplayStyle5Header .BVRRReviewTitle::text')
+            review_loader.add_css('date', '.BVRRReviewDisplayStyle5Header .BVRRReviewDate::text',
+                                  MapCompose(Date('%B %d, %Y')))
+            review_loader.add_css('body', '.BVRRReviewDisplayStyle5BodyContent .BVRRReviewText::text')
+            review_loader.add_css('max_stars', '.BVRRReviewDisplayStyle5Header .BVRRRating img::attr(title)',
+                                  re=r'^\s*\d\s*/\s*(\d)\s*$')
+            review_loader.add_css('stars', '.BVRRReviewDisplayStyle5Header .BVRRRating img::attr(title)',
+                                  re=r'^\s*(\d)\s*/\s*\d\s*$')
+            loader.add_value('reviews', review_loader.load_item())
 
         yield loader.load_item()
