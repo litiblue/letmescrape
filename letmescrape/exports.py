@@ -12,7 +12,7 @@ class LetMeShopApiExporter(BaseItemExporter):
     method = 'POST'
 
     def __init__(self, api_base_url, auth_token, *args, **kwargs):
-        super(LetMeShopApiExporter, self).__init__(*args, **kwargs)
+        super(LetMeShopApiExporter, self).__init__(*args, export_empty_fields=True, **kwargs)
         self.api_base_url = api_base_url
         self.encoder = ScrapyJSONEncoder(**kwargs)
         self.headers = {'Authorization': 'Token %s' % auth_token}
