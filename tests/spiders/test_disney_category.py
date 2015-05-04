@@ -850,9 +850,6 @@ def test_parse(spider):
                                       {'link': u'http://www.disneystore.com/special-offers/mn/1001266/',
                                        'title': u'Special Offers'},
                                       {'link': u'http://www.disneystore.com/tink-s-treasure/mn/1001232/',
-                                       'sub_categories': [
-                                           {'link': u'http://www.disneystore.com/tink-s-treasure/mn/1001232/',
-                                            'title': ''}],
                                        'title': u"Tink's Treasure"}],
                                   'title': u'Sale'}
     ]

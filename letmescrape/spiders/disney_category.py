@@ -29,7 +29,7 @@ class DisneyCategorySpider(CategorySpider):
             top_level_category_loader = _generate_loader(top_level_sel)
             parent_category_loader = top_level_category_loader
 
-            for category_sel in top_level_sel.xpath('../section//ul[@class="folColumn"]/li'):
+            for category_sel in top_level_sel.xpath('../section//ul[@class="folColumn"]/li[normalize-space()]'):
                 category_loader = _generate_loader(category_sel)
 
                 if _is_head(category_sel):
