@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from scrapy import Request
 from scrapy.contrib.loader.processor import TakeFirst
-
-from base import ProductSpider
+from scrapy import Request
+from scrapy.contrib.loader.processor import MapCompose
 
 from letmescrape.utils import get_absolute_url
-from letmescrape.loaders import ProductImageLoader
-
+from letmescrape.processors import JoinExcludingEmptyValues
+from base import ProductSpider
+from letmescrape.loaders import ProductImageLoader, ProductReviewLoader
+from letmescrape.processors import Date
 
 class CartersProductSpider(ProductSpider):
     name = "gnc_product"
@@ -43,7 +44,12 @@ class CartersProductSpider(ProductSpider):
     def parse_list(self, response):
         for item_sel in response.xpath('//div[@id="mainContent"]//ol[@id="products"]/li[@class="productListing"]'):
             values_from_list = self.extract_values_from_list(item_sel, response)
-            request = Request(values_from_list['url'], callback=self.parse_item)
+            request = Request(values_from_list['url'], callback=self.parse_item, meta={
+                'splash': {
+                    'endpoint': 'render.html',
+                    'args': {'wait': '1.0'}
+                }
+            })
 
             request.meta['values_from_list'] = values_from_list
             yield request
@@ -71,5 +77,18 @@ class CartersProductSpider(ProductSpider):
             image_loader.add_xpath('normal_size', '@src')
             image_loader.add_xpath('zoomed', '@data-enh')
             loader.add_value('images', image_loader.load_item())
+
+        #reviews
+        for selector in response.xpath('//div[@id="TTreviewsWrapper"]/div[@id="TTreviews"]/div[@class="TTreview"]'):
+            review_loader = ProductReviewLoader(response=response, selector=selector)
+            review_loader.body_out = JoinExcludingEmptyValues('\n')
+            review_loader.add_xpath('author', 'div[@class="TTrevCol3"]/div/a/span[@itemprop="reviewer"]/text()')
+            review_loader.add_xpath('title', 'div[@class="TTrevCol2"]/div[@class="TTreviewTitle"]/text()')
+            review_loader.add_xpath('date', 'div[@class="TTrevCol3"]/div[@itemprop="dtreviewed"]/text()',
+                                  MapCompose(Date('%B %d, %Y')))
+            review_loader.add_xpath('body', 'div[@class="TTrevCol2"]/div[@class="TTreviewBody"]/text()')
+            review_loader.add_xpath('max_stars', '../../../div[@class="TTreviewSummary"]/div[@class="TT2left"]/span[@class="TTavgRate"]/text()', re=r'/ (.*)')
+            review_loader.add_xpath('stars', '@rating')
+            loader.add_value('reviews', review_loader.load_item())
 
         yield loader.load_item()
