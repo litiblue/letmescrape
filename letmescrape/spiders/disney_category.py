@@ -40,6 +40,6 @@ class DisneyCategorySpider(CategorySpider):
                     parent_category_loader.add_value('sub_categories', category_loader.load_item())
             else:
                 if parent_category_loader is not top_level_category_loader:
-                        top_level_category_loader.add_value('sub_categories', parent_category_loader.load_item())
+                    top_level_category_loader.add_value('sub_categories', parent_category_loader.load_item())
 
             yield top_level_category_loader.load_item()
