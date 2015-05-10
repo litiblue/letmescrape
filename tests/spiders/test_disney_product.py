@@ -27,7 +27,7 @@ def test_list(spider):
     result = list(spider.parse_list(response))
     request = result[0]
 
-    assert len(result) == 472
+    assert len(result) == 456
     assert 'values_from_list' in request.meta
 
 

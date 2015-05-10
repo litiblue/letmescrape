@@ -7,7 +7,7 @@ from scrapy.contrib.loader.processor import MapCompose
 
 from base import ProductSpider
 from letmescrape.loaders import ProductImageLoader, ProductReviewLoader
-from letmescrape.processors import Date
+from letmescrape.processors import Date, JoinExcludingEmptyValues
 from letmescrape.utils import get_absolute_url
 
 
@@ -35,7 +35,9 @@ class DisneyProductSpider(ProductSpider):
             yield Request(ajax_url, callback=self.parse_list)
 
     def check_scrapable(self, item):
-        return item['isCollection'] == 'false' and 'Create Your Own' not in item['title']
+        return (item['isCollection'] == 'false'
+                and 'Create Your Own' not in item['title']
+                and 'Customizable' not in item['title'])
 
     def extract_values_from_list(self, item, response):
         url = item['link']
@@ -92,6 +94,7 @@ class DisneyProductSpider(ProductSpider):
         #reviews
         for selector in response.css('.reviewSection #BVRRWidgetID .BVRRContentReview'):
             review_loader = ProductReviewLoader(response=response, selector=selector)
+            review_loader.body_out = JoinExcludingEmptyValues('\n')
             review_loader.add_css('author', '.BVRRReviewDisplayStyle5BodyUser .BVRRNickname::text')
             review_loader.add_css('title', '.BVRRReviewDisplayStyle5Header .BVRRReviewTitle::text')
             review_loader.add_css('date', '.BVRRReviewDisplayStyle5Header .BVRRReviewDate::text',
