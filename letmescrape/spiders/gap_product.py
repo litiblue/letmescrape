@@ -14,7 +14,7 @@ from letmescrape.processors import Date
 from letmescrape.utils import get_absolute_url
 
 
-class CartersProductSpider(ProductSpider):
+class GapProductSpider(ProductSpider):
     name = "gap_product"
     allowed_domains = ["gap.com"]
     start_urls = (

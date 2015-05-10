@@ -6,7 +6,8 @@ from letmescrape.loaders import CategoryLoader
 from letmescrape.processors import JoinExcludingEmptyValues
 from letmescrape.utils import get_absolute_url
 
-class GncCategorySpider(CategorySpider):
+
+class GapCategorySpider(CategorySpider):
     name = "gap_category"
     allowed_domains = ["gap.com"]
     start_urls = (
