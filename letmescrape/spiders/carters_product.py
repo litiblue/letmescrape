@@ -17,6 +17,7 @@ class CartersProductSpider(ProductSpider):
     start_urls = (
         'http://www.carters.com/',
     )
+    list_url_base = "http://www.carters.com/%s?cgid=%s&sz=all&format=ajax"
     default_values = {
         'brand': 'carters',
         'sub_brand': None,
@@ -28,7 +29,7 @@ class CartersProductSpider(ProductSpider):
         m = re.search('(?!.*\/)(.*?)\?', url)
         N = m.group(1)
 
-        ajax_url = "http://www.carters.com/%s?cgid=%s&sz=all&format=ajax" % (N, N)
+        ajax_url = self.list_url_base % (N, N)
         return ajax_url
 
     def start_requests(self):
