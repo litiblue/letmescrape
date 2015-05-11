@@ -38,9 +38,9 @@ class CartersProductSpider(ProductSpider):
             yield Request(ajax_url, callback=self.parse_list)
 
     def extract_values_from_list(self, item, response):
-        url = item.xpath('div[@class="product-tile "]/div[@class="product-image"]/a[@class="thumb-link"]/@href').extract()[0]
-        list_images = item.xpath('div[@class="product-tile "]/div[@class="product-image"]/a[@class="thumb-link"]/img/@src').extract()[0]
-        product_number = item.xpath('div[@class="product-tile "]/div[@class="product-image"]/a[@class="thumb-link"]/@href').re(r'(?!.*\/)(.*?).html\?')[0]
+        url = item.xpath('div[@class="product-image"]/a[@class="thumb-link"]/@href').extract()[0]
+        list_images = item.xpath('div[@class="product-image"]/a[@class="thumb-link"]/img/@src').extract()[0]
+        product_number = item.xpath('div[@class="product-image"]/a[@class="thumb-link"]/@href').re(r'(?!.*\/)(.*?).html\?')[0]
 
         return {
             'url': url,
@@ -49,7 +49,7 @@ class CartersProductSpider(ProductSpider):
         }
 
     def parse_list(self, response):
-        for item_sel in response.xpath('//div[@class="search-result-content"]/ul[@id="search-result-items"]/li[@class="grid-tile"]'):
+        for item_sel in response.xpath('//div[@class="search-result-content"]/ul[@id="search-result-items"]/li[@class="grid-tile"]/div[@class="product-tile "]'):
             values_from_list = self.extract_values_from_list(item_sel, response)
             request = Request(values_from_list['url'], callback=self.parse_item, meta={
                 'splash': {
