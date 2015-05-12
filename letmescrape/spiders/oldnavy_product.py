@@ -147,7 +147,7 @@ class OldnavyProductSpider(ProductSpider):
         for selector in response.xpath('//div[@id="BVRRContainer"]//ol[contains(@class,"bv-content-list")]/li[contains(@class,"bv-content-item")]'):
             review_loader = ProductReviewLoader(response=response, selector=selector)
             review_loader.body_out = JoinExcludingEmptyValues('\n')
-            review_loader.add_xpath('author', 'div[@class="bv-author-profile"]/div[@class="bv-inline-profile"]/div[@class="bv-author-avatar"]/div[@class="bv-author-avatar-nickname"]/div[@class="bv-content-author-name"]/button/h3/text()')
+            review_loader.add_xpath('author', 'div[@class="bv-author-profile"]/div[@class="bv-inline-profile"]/div[@class="bv-author-avatar"]/div[@class="bv-author-avatar-nickname"]/div[@class="bv-content-author-name"]/span/h3/text()')
             review_loader.add_xpath('title', 'div/div[@class="bv-content-container"]//h4[@class="bv-content-title"]/text()')
             review_loader.add_xpath('date', 'div/div[@class="bv-content-container"]//div[@class="bv-content-datetime"]/meta[@itemprop="dateCreated"]/@content',
                                   MapCompose(Date('%Y-%m-%d')))
