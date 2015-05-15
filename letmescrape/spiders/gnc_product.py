@@ -56,6 +56,7 @@ class CartersProductSpider(ProductSpider):
 
     def parse_item(self, response):
         loader = self.get_product_item_loader_with_default_values(response)
+        loader.title_out = JoinExcludingEmptyValues(' - ')
         loader.original_price_out = TakeFirst()
 
         values_from_list = response.meta.get('values_from_list', {})
@@ -64,11 +65,12 @@ class CartersProductSpider(ProductSpider):
 
         loader.add_xpath('product_number', '//div[@id="product-info"]/div[contains(@class,"product-info-top")]/div/span[@class="product-number"]/text()', re='Item #(.*)')
         loader.add_xpath('title', '//div[@id="product-title"]/h2/text()')
+        loader.add_xpath('title', '//div[@id="product-info"]/div[@class="product-info-top product-sprite"]/p[@class="product-size"]/text()')
         loader.add_xpath('description', '//dl[@class="product-info-tabs"]/dd[@id="tab-description-content"]//text()')
         loader.add_xpath('original_price', '//div[@id="product-info"]/div[contains(@class,"product-price")]/p[@class="was"]/text()', re='Price: (.*)')
         loader.add_xpath('original_price', '//div[@id="product-info"]/div[contains(@class,"product-price")]/p[@class="now"]/text()', re='Price: (.*)')
         loader.add_xpath('sale_price', '//div[@id="product-info"]/div[contains(@class,"product-price")]/p[@class="now"]/text()', re='Price: (.*)')
-        loader.add_xpath('default_color', '//div[@id="product-info"]/div[@class="product-info-top product-sprite"]/p[@class="product-size"]/text()')
+        loader.add_xpath('sizes', '//div[@id="product-info"]/div[@class="product-info-top product-sprite"]/p[@class="product-size"]/text()')
 
         #images
         for selector in response.xpath('//div[@class="main-image-wrap"]/img[@class="prod-image"]'):
