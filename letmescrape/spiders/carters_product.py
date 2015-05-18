@@ -84,10 +84,16 @@ class CartersProductSpider(ProductSpider):
             loader.add_value('colors', color_loader.load_item())
 
         #images
-        for selector in response.xpath('//div[@class="product-primary-image"]'):
+        for selector in response.xpath('//div[contains(@class,"product-image-container")]/div[@class="product-primary-image"]'):
             image_loader = ProductImageLoader(response=response, selector=selector)
-            image_loader.add_xpath('thumbnail', 'a//img[@class="primary-image"]/@src')
-            image_loader.add_xpath('normal_size', 'a//img[@class="primary-image"]/@src')
+            image_loader.add_xpath('thumbnail', 'a/div/img[@class="primary-image"]/@src')
+            image_loader.add_xpath('normal_size', 'a/div/img[@class="primary-image"]/@src')
+            image_loader.add_xpath('zoomed', 'a/@href')
+            loader.add_value('images', image_loader.load_item())
+        for selector in response.xpath('//div[contains(@class,"product-image-container")]/div[@class="product-thumbnails"]/ul/li[@class="thumb"]'):
+            image_loader = ProductImageLoader(response=response, selector=selector)
+            image_loader.add_xpath('thumbnail', 'a/img[@class="productthumbnail"]/@src')
+            image_loader.add_xpath('normal_size', 'a/img[@class="productthumbnail"]/@src')
             image_loader.add_xpath('zoomed', 'a/@href')
             loader.add_value('images', image_loader.load_item())
 
