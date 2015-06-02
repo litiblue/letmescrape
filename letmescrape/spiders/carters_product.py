@@ -7,7 +7,6 @@ from scrapy.contrib.loader.processor import MapCompose
 from letmescrape.processors import JoinExcludingEmptyValues
 from base import ProductSpider
 from letmescrape.loaders import ProductImageLoader, ProductColorLoader, ProductReviewLoader
-
 from letmescrape.processors import Date
 
 
@@ -51,10 +50,22 @@ class CartersProductSpider(ProductSpider):
     def parse_list(self, response):
         for item_sel in response.xpath('//div[@class="search-result-content"]/ul[@id="search-result-items"]/li[@class="grid-tile"]/div[@class="product-tile "]'):
             values_from_list = self.extract_values_from_list(item_sel, response)
+
+            script = """
+            function main(splash)
+                splash:go(splash.args.url)
+                while(splash:evaljs("document.querySelector('.BVRRWidget') == null"))
+                do
+                    splash:wait(0.05)
+                end
+                return splash:html()
+            end
+            """
+
             request = Request(values_from_list['url'], callback=self.parse_item, meta={
                 'splash': {
-                    'endpoint': 'render.html',
-                    'args': {'wait': '1.0'}
+                    'endpoint': 'execute',
+                    'args': {'lua_source': script}
                 }
             })
 
