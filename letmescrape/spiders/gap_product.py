@@ -67,6 +67,8 @@ class GapProductSpider(ProductSpider):
         }
 
     def get_url_for_data(self, url):
+        if url.find('vid=') < 0 or url.find('pid=') < 0:
+            return None
         vid = re.search('\??vid=(.*?)(&|$)', url).group(1)
         pid = re.search('\??pid=(.*?)(&|$)', url).group(1)
         data_url = "http://www.gap.com/browse/productData.do?pid=%s&vid=%s" % (pid[0:6], vid)
@@ -77,9 +79,10 @@ class GapProductSpider(ProductSpider):
             values_from_list = self.extract_values_from_list(item_sel, response)
             url = self.get_url_for_data(values_from_list['url'])
 
-            request = Request(url, callback=self.parse_data)
-            request.meta['values_from_list'] = values_from_list
-            yield request
+            if url is not None:
+                request = Request(url, callback=self.parse_data)
+                request.meta['values_from_list'] = values_from_list
+                yield request
 
     def parse_data(self, response):
         values_from_list = response.meta.get('values_from_list', {})
