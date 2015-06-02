@@ -43,12 +43,24 @@ class OldnavyProductSpider(ProductSpider):
         data = json.loads(response.body)
         total_page = int(data['productCategoryFacetedSearch']['productCategory']['productCategoryPaginator']['pageNumberTotal'])
         page = 0
+
+        script = """
+        function main(splash)
+            splash:go(splash.args.url)
+            while(splash:evaljs("document.querySelector('.productPlaceholder') == null"))
+            do
+                splash:wait(0.05)
+            end
+            return splash:html()
+        end
+        """
+
         while page < total_page:
             list_url = self.get_url_for_list(response.meta.get('url'), page)
             yield Request(list_url, callback=self.parse_list, meta={
                 'splash': {
-                    'endpoint': 'render.html',
-                    'args': {'wait': '1.0'}
+                    'endpoint': 'execute',
+                    'args': {'lua_source': script}
                 }
             })
             page += 1
@@ -87,10 +99,21 @@ class OldnavyProductSpider(ProductSpider):
         pattern = "StyleColor\(\"%s\".*?\.styleColorImagesMap = (.*?);" % pid
         images_data = json.loads(re.search(pattern, response.body).group(1).replace("'", "\""))
 
+        script = """
+        function main(splash)
+            splash:go(splash.args.url)
+            while(splash:evaljs("document.querySelector('.bv-content-list') == null"))
+            do
+                splash:wait(0.05)
+            end
+            return splash:html()
+        end
+        """
+
         request = Request(values_from_list['url'], callback=self.parse_item, meta={
             'splash': {
-                'endpoint': 'render.html',
-                'args': {'wait': '1.0'}
+                'endpoint': 'execute',
+                'args': {'lua_source': script}
             }
         })
 
