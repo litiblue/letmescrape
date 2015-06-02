@@ -3,9 +3,18 @@ from scrapy.contrib.loader.processor import MapCompose
 
 from items import *
 from letmescrape.processors import extract_price, html2text, JoinExcludingEmptyValues
+from scrapy.exceptions import DropItem
 
 
-class ProductLoader(ItemLoader):
+class BaseItemLoader(ItemLoader):
+    def load_item(self):
+        item = super(BaseItemLoader, self).load_item()
+        for field_name, options in item.fields.items():
+            if options.get('required', False) and field_name not in item:
+                raise DropItem("%s is required.", field_name)
+        return item
+
+class ProductLoader(BaseItemLoader):
     default_item_class = ProductItem
 
     original_price_in = MapCompose(extract_price)
@@ -15,17 +24,17 @@ class ProductLoader(ItemLoader):
     description_out = JoinExcludingEmptyValues(u'\n')
 
 
-class ProductImageLoader(ItemLoader):
+class ProductImageLoader(BaseItemLoader):
     default_item_class = ProductImageItem
 
 
-class ProductColorLoader(ItemLoader):
+class ProductColorLoader(BaseItemLoader):
     default_item_class = ProductColorItem
 
 
-class ProductReviewLoader(ItemLoader):
+class ProductReviewLoader(BaseItemLoader):
     default_item_class = ProductReviewItem
 
 
-class CategoryLoader(ItemLoader):
+class CategoryLoader(BaseItemLoader):
     default_item_class = CategoryItem
