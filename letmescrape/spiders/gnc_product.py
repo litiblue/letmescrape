@@ -44,10 +44,22 @@ class CartersProductSpider(ProductSpider):
     def parse_list(self, response):
         for item_sel in response.xpath('//div[@id="mainContent"]//ol[@id="products"]/li[@class="productListing"]'):
             values_from_list = self.extract_values_from_list(item_sel, response)
+
+            script = """
+            function main(splash)
+                splash:go(splash.args.url)
+                while(splash:evaljs("document.querySelector('#TTreviewsWrapper') == null"))
+                do
+                    splash:wait(0.05)
+                end
+                return splash:html()
+            end
+            """
+
             request = Request(values_from_list['url'], callback=self.parse_item, meta={
                 'splash': {
-                    'endpoint': 'render.html',
-                    'args': {'wait': '1.0'}
+                    'endpoint': 'execute',
+                    'args': {'lua_source': script}
                 }
             })
 
