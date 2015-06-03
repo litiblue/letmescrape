@@ -12,6 +12,7 @@ from base import ProductSpider
 from letmescrape.loaders import ProductImageLoader, ProductColorLoader, ProductReviewLoader
 from letmescrape.processors import Date
 from letmescrape.utils import get_absolute_url
+from letmescrape.scripts import make_lua_script
 
 
 class GapProductSpider(ProductSpider):
@@ -44,16 +45,7 @@ class GapProductSpider(ProductSpider):
         total_page = int(data['productCategoryFacetedSearch']['productCategory']['productCategoryPaginator']['pageNumberTotal'])
         page = 0
 
-        script = """
-        function main(splash)
-            splash:go(splash.args.url)
-            while(splash:evaljs("document.querySelector('.productPlaceholder') == null"))
-            do
-                splash:wait(0.05)
-            end
-            return splash:html()
-        end
-        """
+        script = make_lua_script('.productPlaceholder')
 
         while page < total_page:
             list_url = self.get_url_for_list(response.meta.get('url'), page)
