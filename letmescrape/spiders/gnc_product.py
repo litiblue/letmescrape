@@ -9,6 +9,7 @@ from letmescrape.processors import JoinExcludingEmptyValues
 from base import ProductSpider
 from letmescrape.loaders import ProductImageLoader, ProductReviewLoader
 from letmescrape.processors import Date
+from letmescrape.scripts import make_lua_script
 
 class CartersProductSpider(ProductSpider):
     name = "gnc_product"
@@ -45,16 +46,7 @@ class CartersProductSpider(ProductSpider):
         for item_sel in response.xpath('//div[@id="mainContent"]//ol[@id="products"]/li[@class="productListing"]'):
             values_from_list = self.extract_values_from_list(item_sel, response)
 
-            script = """
-            function main(splash)
-                splash:go(splash.args.url)
-                while(splash:evaljs("document.querySelector('#TTreviewsWrapper') == null"))
-                do
-                    splash:wait(0.05)
-                end
-                return splash:html()
-            end
-            """
+            script = make_lua_script('#TTreviewsWrapper')
 
             request = Request(values_from_list['url'], callback=self.parse_item, meta={
                 'splash': {
