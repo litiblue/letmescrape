@@ -36,6 +36,7 @@ class GymboreeCategorySpider(CategorySpider):
 
             yield request
 
+
     def parse_category(self, response):
 
         top_level_category_loader = response.meta['loader']
@@ -53,15 +54,25 @@ class GymboreeCategorySpider(CategorySpider):
 
             for column_sel in response.xpath('//div[contains(@id,"left-menu")]/ul[@id="left-menu-ul%d"]/li[node()]/a' % i):
                 title = column_sel.xpath('text()').extract()
+                sale_title = column_sel.xpath('b/font/text()').extract()
+
                 link = column_sel.xpath('@href').extract()
 
-                column_sel_loader = self._generate_loader(column_sel, response, title, link)
+                if len(title) != 0:
+                    column_sel_loader = self._generate_loader(column_sel, response, title, link)
+                elif len(sale_title) != 0:
+                    column_sel_loader = self._generate_loader(column_sel, response, sale_title, link)
 
                 for leaf_sel in response.xpath('//div[@id="left-menu"]/ul[@id="left-menu-ul%d"]/ul[@id="left-submenu-ul%d%d"]/li[node()]/a' % (i, i, j)):
                     title = leaf_sel.xpath('text()').extract()
+                    up_title = leaf_sel.xpath('b/font/text()').extract()
                     link = leaf_sel.xpath('@href').extract()
 
-                    leaf_sel_loader = self._generate_loader(leaf_sel, response, title, link)
+                    if len(title) != 0:
+                        leaf_sel_loader = self._generate_loader(leaf_sel, response, title, link)
+                    elif len(up_title) != 0:
+                        leaf_sel_loader = self._generate_loader(leaf_sel, response, up_title, link)
+
                     column_sel_loader.add_value('sub_categories', leaf_sel_loader.load_item())
 
                 top_level_sub_column_sel_loader.add_value('sub_categories', column_sel_loader.load_item())
