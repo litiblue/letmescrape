@@ -94,16 +94,7 @@ class GapProductSpider(ProductSpider):
         pattern = "StyleColor\(\"%s\".*?\.styleColorImagesMap = (.*?);" % pid
         images_data = json.loads(re.search(pattern, response.body).group(1).replace("'", "\""))
 
-        script = """
-        function main(splash)
-            splash:go(splash.args.url)
-            while(splash:evaljs("document.querySelector('.bv-content-list') == null"))
-            do
-                splash:wait(0.05)
-            end
-            return splash:html()
-        end
-        """
+        script = make_lua_script('.bv-content-list')
 
         request = Request(values_from_list['url'], callback=self.parse_item, meta={
             'splash': {
