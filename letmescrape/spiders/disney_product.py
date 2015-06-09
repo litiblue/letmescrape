@@ -9,6 +9,7 @@ from base import ProductSpider
 from letmescrape.loaders import ProductImageLoader, ProductReviewLoader
 from letmescrape.processors import Date, JoinExcludingEmptyValues
 from letmescrape.utils import get_absolute_url
+from letmescrape.scripts import make_lua_script
 
 
 class DisneyProductSpider(ProductSpider):
@@ -57,10 +58,12 @@ class DisneyProductSpider(ProductSpider):
                 url = get_absolute_url(response, item['link'])
                 values_from_list = self.extract_values_from_list(item, response)
 
+                script = make_lua_script('.BVRRWidget')
+
                 request = Request(url, callback=self.parse_item, meta={
                     'splash': {
-                        'endpoint': 'render.html',
-                        'args': {'wait': '1.0'}
+                        'endpoint': 'execute',
+                        'args': {'lua_source': script}
                     }
                 })
 
