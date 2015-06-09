@@ -15,7 +15,8 @@ class RalphlaurenCategorySpider(CategorySpider):
 
     def parse(self, response):
 
-        script = make_lua_script('li[rel=shop-all-men]')
+        selector_list = ["li[rel=shop-all-men]"]
+        script = make_lua_script(selector_list)
         request = Request(response.url, callback=self.parse_redirect_url, meta={
             'splash': {
                     'endpoint': 'execute',
