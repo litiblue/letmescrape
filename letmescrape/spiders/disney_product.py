@@ -58,7 +58,8 @@ class DisneyProductSpider(ProductSpider):
                 url = get_absolute_url(response, item['link'])
                 values_from_list = self.extract_values_from_list(item, response)
 
-                script = make_lua_script('.BVRRWidget')
+                selector_list = [".BVRRWidget"]
+                script = make_lua_script(selector_list)
 
                 request = Request(url, callback=self.parse_item, meta={
                     'splash': {
