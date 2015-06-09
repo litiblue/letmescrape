@@ -46,7 +46,8 @@ class CartersProductSpider(ProductSpider):
         for item_sel in response.xpath('//div[@id="mainContent"]//ol[@id="products"]/li[@class="productListing"]'):
             values_from_list = self.extract_values_from_list(item_sel, response)
 
-            script = make_lua_script('#TTreviewsWrapper')
+            selector_list = ["#TTreviewsWrapper"]
+            script = make_lua_script(selector_list)
 
             request = Request(values_from_list['url'], callback=self.parse_item, meta={
                 'splash': {
