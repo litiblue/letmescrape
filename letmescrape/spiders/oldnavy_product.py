@@ -44,8 +44,9 @@ class OldnavyProductSpider(ProductSpider):
         data = json.loads(response.body)
         total_page = int(data['productCategoryFacetedSearch']['productCategory']['productCategoryPaginator']['pageNumberTotal'])
         page = 0
-
-        script = make_lua_script('.productPlaceholder')
+        
+        selector_list = [".productPlaceholder"]
+        script = make_lua_script(selector_list)
 
         while page < total_page:
             list_url = self.get_url_for_list(response.meta.get('url'), page)
@@ -91,7 +92,8 @@ class OldnavyProductSpider(ProductSpider):
         pattern = "StyleColor\(\"%s\".*?\.styleColorImagesMap = (.*?);" % pid
         images_data = json.loads(re.search(pattern, response.body).group(1).replace("'", "\""))
 
-        script = make_lua_script('.bv-content-list')
+        selector_list = [".bv-content-list"]
+        script = make_lua_script(selector_list)
 
         request = Request(values_from_list['url'], callback=self.parse_item, meta={
             'splash': {
