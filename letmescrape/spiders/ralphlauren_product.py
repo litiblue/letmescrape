@@ -3,6 +3,7 @@
 from scrapy import Request
 from scrapy.contrib.loader.processor import TakeFirst
 from base import ProductSpider
+from letmescrape.scripts import make_lua_script
 
 from letmescrape.loaders import ProductImageLoader, ProductColorLoader, ProductReviewLoader
 
@@ -54,12 +55,7 @@ class RalphlaurenProductSpider(ProductSpider):
             page = 1
             while page < int(total_page)+1:
                 url = response.url+'&pg=%s' % page
-                request = Request(url, callback=self.parse_list, meta={
-                    'splash': {
-                        'endpoint': 'render.html',
-                        'args': {'wait': '1.0'}
-                    }
-                })
+                request = Request(url, callback=self.parse_list)
                 page += 1
                 yield request
 
@@ -68,18 +64,18 @@ class RalphlaurenProductSpider(ProductSpider):
             values_from_list = self.extract_values_from_list(item_sel, response)
 
             if values_from_list:
+                selector_list = [".detail", ".current"]
+                script = make_lua_script(selector_list, "&&")
                 request = Request(values_from_list['url'], callback=self.parse_item, meta={
                     'splash': {
-                        'endpoint': 'render.html',
-                        'args': {'wait': '1.0'}
+                        'endpoint': 'execute',
+                        'args': {'lua_source': script}
                     }
                 })
 
                 request.meta['values_from_list'] = values_from_list
 
                 yield request
-            else:
-                yield None
 
     def parse_item(self, response):
 
@@ -91,12 +87,17 @@ class RalphlaurenProductSpider(ProductSpider):
             loader.add_value(key, value)
 
         loader.add_xpath('product_number', '//div[@class="prod-summary"]/div[@class="prod-style"]/span[@class="style-num"]/text()')
+        loader.add_xpath('product_number', '//td[@id="productDescription"]/div[@class="productStyleDiv"]/span[@class="productStyle"]/span/text()') # http://www.ralphlauren.com//product/index.jsp?productId=11765920
         loader.add_xpath('title', '//div[@class="prod-summary"]/div[node()]/h1[@class="prod-title"]/text()')
+        loader.add_xpath('title', '//td[@id="productDescription"]/div[@class="prodtitleLG"]/h1/text()') # http://www.ralphlauren.com//product/index.jsp?productId=11765920
         loader.add_xpath('description', '//div[@class="prod-top-content"]/div[@class="prod-details"]/div[@class="detail"]/ul')
+        loader.add_xpath('description', '//td[@id="productDescription"]/div[@id="st_gt"]/div[@id="toccontent"]/div[@id="_Page_0"]/div[@class="descpad"]/div[@id="padDescDiv"]/span/ul/li/text()') # http://www.ralphlauren.com//product/index.jsp?productId=11765920
         loader.add_xpath('sizes', '//div[@class="prod-summary"]/div[contains(@class,"product-actions")]/div[@class="prod-sizes"]/ul[@id="size-swatches"]/li[node()]/@title')
+        loader.add_xpath('sizes', '//td[@id="productDescription"]/table/tbody/tr/td/div[@id="sizeHeader"]/div[contains(@class,"cmfilter")]/ul/li[not(contains(@class, "selected"))]/text()') # http://www.ralphlauren.com//product/index.jsp?productId=11765920
         loader.add_xpath('original_price', '//div[@class="prod-summary"]/div[@class="prod-price"]/span/span[contains(@class,"reg-price")]/span/text()') # http://www.ralphlauren.com/product/index.jsp?productId=56228126
         loader.add_xpath('original_price', '//div[@class="prod-summary"]/div[@class="prod-price"]/span/span[contains(@class,"reg-price")]/text()') # http://www.ralphlauren.com//product/index.jsp?productId=56541926
         loader.add_xpath('original_price', '//table[@id="productDescription"]/tbody/tr/td/div[@class="productStylePrice"]/b/span/span/text()')
+        loader.add_xpath('original_price', '//td[@id="productDescription"]/font[@class="prodourprice"]/span/text()') # http://www.ralphlauren.com//product/index.jsp?productId=11765920
         loader.add_xpath('original_price', '//td[@id="productDescription"]/font[@class="prodourprice"]/text()', re='Price: (.*)') # http://www.ralphlauren.com//product/index.jsp?productId=11765920
         loader.add_xpath('sale_price', '//div[@class="prod-summary"]/div[@class="prod-price"]/span/span[@class="sale-price"]/span/text()')
         loader.add_xpath('sale_price', '//td[@id="productDescription"]/font[@class="templateSalePrice"]/span/text()')
@@ -117,12 +118,35 @@ class RalphlaurenProductSpider(ProductSpider):
             color_loader.add_xpath('swatch_image', 'img[not(contains(@class, "crossoff"))]/@src')
             loader.add_value('colors', color_loader.load_item())
 
+        # http://www.ralphlauren.com//product/index.jsp?productId=11765920
+        colors = []
+        for selector in response.xpath('//td[@id="productDescription"]/table/tbody/tr/td/div[@class="colorHeader"]/div[@class="cmfilter"]/ul[@class="dropDown"]/li'):
+            color = selector.xpath('text()').extract()
+            colors.append(color)
+
+        color_images = []
+        for selector in response.xpath('//td[@id="productDescription"]/table/tbody/tr/td/div[@id="colorSwatches"]/a/img'):
+            color_image = selector.xpath('@src').extract()
+            color_images.append(color_image)
+
+        for index, sel in enumerate(colors):
+            color_loader = ProductColorLoader(response=response, selector=selector)
+            color_loader.add_value('name', colors[index])
+            color_loader.add_value('swatch_image', color_images[index])
+            loader.add_value('colors', color_loader.load_item())
+
+
         #image
         for selector in response.xpath('//div[@class="prod-img"]'):
             image_loader = ProductImageLoader(response=response, selector=selector)
             image_loader.add_xpath('thumbnail', 'div[@class="img-control"]/div[@id="altImages"]/ul[@class="altImages"]/li[@class="swatch active"]/a/img/@src')
             image_loader.add_xpath('normal_size', 'input[@name="enh_0"]/@value')
             image_loader.add_xpath('zoomed', 'input[@name="enh_0"]/@value')
+            loader.add_value('images', image_loader.load_item())
+
+        for selector in response.xpath('//div[@id="imageDiv"]/img'):
+            image_loader = ProductImageLoader(response=response, selector=selector)
+            image_loader.add_xpath('normal_size', '@src')
             loader.add_value('images', image_loader.load_item())
 
         yield loader.load_item()
