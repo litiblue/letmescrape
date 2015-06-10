@@ -1,6 +1,7 @@
 from urlparse import urljoin
 
 import requests
+import json
 from scrapy.contrib.exporter import BaseItemExporter
 from scrapy.utils.serialize import ScrapyJSONEncoder
 
@@ -78,6 +79,23 @@ class LetMeShopApiCategoriesExporter(LetMeShopApiExporter):
 
 
 class LetMeShopApiProductExporter(LetMeShopApiExporter):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, site_category_id, job_id, *args, **kwargs):
         self.api_end_point = 'products/'
+        self.site_category_id = site_category_id
+        self.job_id = job_id
         super(LetMeShopApiProductExporter, self).__init__(*args, **kwargs)
+
+    def start_exporting(self):
+        data = {"status": "started"}
+        self.scrapy_start_finish_api_call(data)
+
+    def finish_exporting(self):
+        data = {"status": "finished"}
+        self.scrapy_start_finish_api_call(data)
+
+    def scrapy_start_finish_api_call(self, data):
+        method = 'PATCH'
+        request_url = 'site_categories/{0}/crawling_job/{1}'.format(self.site_category_id, self.job_id)
+        request_url = urljoin(self.api_base_url, request_url)
+        r = requests.request(method, request_url, data=json.dumps(data), headers=self.headers)
+        r.raise_for_status()

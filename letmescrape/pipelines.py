@@ -65,7 +65,7 @@ class LetMeShopApiPipeline(object):
             if isinstance(spider, CategorySpider):
                 exporter = LetMeShopApiCategoriesExporter(spider.site_id, api_base_url, auth_token)
             elif isinstance(spider, ProductSpider):
-                exporter = LetMeShopApiProductExporter(api_base_url, auth_token)
+                exporter = LetMeShopApiProductExporter(spider.site_category_id, spider.job_id, api_base_url, auth_token)
             else:
                 raise TypeError('Unknown spider')
 
