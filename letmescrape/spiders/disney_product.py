@@ -58,8 +58,8 @@ class DisneyProductSpider(ProductSpider):
                 url = get_absolute_url(response, item['link'])
                 values_from_list = self.extract_values_from_list(item, response)
 
-                selector_list = [".BVRRWidget"]
-                script = make_lua_script(selector_list)
+                selector_list = [".BVRRWidget", "iframe#contentFrame"]
+                script = make_lua_script(selector_list, '&&')
 
                 request = Request(url, callback=self.parse_item, meta={
                     'splash': {
@@ -72,6 +72,10 @@ class DisneyProductSpider(ProductSpider):
                 yield request
 
     def parse_item(self, response):
+        if response.css("iframe#contentFrame"):
+            # personalize product
+            return
+
         loader = self.get_product_item_loader_with_default_values(response)
 
         values_from_list = response.meta.get('values_from_list', {})
