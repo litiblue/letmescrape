@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import re
+import sys
 
 from scrapy.contrib.loader.processor import TakeFirst
 from scrapy import Request
@@ -12,6 +13,9 @@ from base import ProductSpider
 from letmescrape.loaders import ProductImageLoader, ProductReviewLoader
 from letmescrape.processors import Date
 
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 class IherbProductSpider(ProductSpider):
     name = "iherb_product"
@@ -32,7 +36,7 @@ class IherbProductSpider(ProductSpider):
 
     def get_url_for_review(self, url, page=1):
         review_url = "%s/?p=%s" % (url, page)
-        review_url = review_url.replace("http://www.iherb.com/", "http://www.iherb.com/product-reviews/")
+        review_url = review_url.replace(".iherb.com/", ".iherb.com/product-reviews/")
         return review_url
 
     def get_next_page_url_for_review(self, url):
@@ -47,7 +51,7 @@ class IherbProductSpider(ProductSpider):
 
     def start_requests(self):
         for url in self.start_urls:
-            yield Request(url, callback=self.parse_page)
+            yield Request(url, cookies={'iher-pref':'ctd=www&sccode=KR&lan=ko-KR&scurcode=USD&lchg=1&svcode=KR&vlan=ko-KR&vcurcode=USD&ifv=i'}, callback=self.parse_page)
 
     def extract_values_from_list(self, item, response):
         url = get_absolute_url(response, item.xpath('@href').extract()[0])
@@ -62,8 +66,9 @@ class IherbProductSpider(ProductSpider):
 
     def parse_page(self, response):
         total_page = response.xpath('//div[@id="display-results-header"]/p[@class="display-items"]/text()').extract()[0]
-        total_page = int(re.search('of (.*?) total', total_page).group(1))/24 + 1
+        total_page = int(re.search(ur'전체 (\d+) 상품', total_page).group(1))/24 + 1
         page = 1
+
         while page <= total_page:
             list_url = self.get_url_for_list(response.url, page)
             request = Request(list_url, callback=self.parse_list)
@@ -99,12 +104,13 @@ class IherbProductSpider(ProductSpider):
         loader.add_value('reviews', reviews)
 
         loader.add_xpath('title', '//div[@id="mainContent"]/section[@id="product-summary"]/div[@id="product-specification"]/h1/text()')
+        loader.add_xpath('description', '//div[@id="mainContent"]/section[@id="product-summary"]/div[@id="product-specification"]/p[contains(@class, "red")]')
         loader.add_xpath('description', '//div[@class="prodOverview-section"]')
         loader.add_xpath('original_price', '//div[@id="mainContent"]/section[@id="product-summary"]/div[@id="product-action"]/section[@id="product-msrp"]/div[2]/text()')
         loader.add_xpath('sale_price', '//div[@id="mainContent"]/section[@id="product-summary"]/div[@id="product-action"]/section[@id="super-special-price"]/div[2]/b/text()')
         loader.add_xpath('sale_price', '//div[@id="mainContent"]/section[@id="product-summary"]/div[@id="product-action"]/section[@id="product-price"]/div[2]/text()')
-        loader.add_xpath('sizes', '//div[@id="mainContent"]/section[@id="product-summary"]/div[@id="product-specification"]/ul[@id="product-specs-list"]/li[4]/text()', re='Package Quantity: (.*)')
-        loader.add_xpath('sizes', '//div[@id="mainContent"]/section[@id="product-summary"]/div[@id="product-specification"]/ul[@id="product-specs-list"]/li[5]/text()', re='Package Quantity: (.*)')
+        loader.add_xpath('sizes', '//div[@id="mainContent"]/section[@id="product-summary"]/div[@id="product-specification"]/ul[@id="product-specs-list"]/li[4]/text()', re=ur'포장 수량: (.*)')
+        loader.add_xpath('sizes', '//div[@id="mainContent"]/section[@id="product-summary"]/div[@id="product-specification"]/ul[@id="product-specs-list"]/li[5]/text()', re=ur'포장 수량: (.*)')
 
         #images
         if response.xpath('//div[@id="mainContent"]/section[@id="product-summary"]//div[@id="product-image"]/div[@class="smImHolder"]/div[@class="prod-im-sm-front"]'):
@@ -135,9 +141,9 @@ class IherbProductSpider(ProductSpider):
             review_loader.add_xpath('author', 'div[contains(@class, "starRatingsContainer")]/p/a/text()')
             review_loader.add_xpath('title', 'div[@class="textcontainerTop"]/p/text()')
             review_loader.add_xpath('date', 'div[contains(@class, "starRatingsContainer")]/p/text()[2]',
-                                  MapCompose(Date(' on %b %d, %Y\r\n        ')))
+                                  MapCompose(Date('님께서 %b %d, %Y 에 작성하셨습니다.\r\n        ')))
             review_loader.add_xpath('body', 'div[@class="textcontainer"]/p/text()')
-            review_loader.add_xpath('max_stars', '../../../div[@class="prodOverview-wrapper"][1]/div/div/div[@class="ratingsChart"]/div[@class="row"][1]/div/div/text()', re=r'(.*) Stars')
+            review_loader.add_xpath('max_stars', '../../../div[@class="prodOverview-wrapper"][1]/div/div/div[@class="ratingsChart"]/div[@class="row"][1]/div/div/text()', re=ur'(.*) 별점')
             review_loader.add_xpath('stars', 'div[contains(@class, "starRatingsContainer")]/img/@src', re=r'stars/(.*)0.png')
 
             reviews.append(review_loader.load_item())

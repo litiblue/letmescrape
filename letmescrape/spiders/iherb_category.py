@@ -13,6 +13,10 @@ class IherbCategorySpider(CategorySpider):
         'http://www.iherb.com/',
     )
 
+    def start_requests(self):
+        for url in self.start_urls:
+            yield Request(url, cookies={'iher-pref':'ctd=www&sccode=KR&lan=ko-KR&scurcode=USD&lchg=1&svcode=KR&vlan=ko-KR&vcurcode=USD&ifv=i'}, callback=self.parse)
+
     def generate_loader(self, selector, response):
         loader = CategoryLoader(selector=selector, response=response)
         loader.add_xpath('title', 'text()')
