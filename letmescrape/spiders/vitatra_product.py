@@ -33,7 +33,7 @@ class VitatraProductSpider(ProductSpider):
     def start_requests(self):
         for url in self.start_urls:
             list_url = self.get_url_for_list(url)
-            yield Request(list_url, callback=self.parse_list)
+            yield Request(list_url, cookies={'lang':'KR', 'user_lang':'KR'}, callback=self.parse_list)
 
     def extract_values_from_list(self, item, response):
         url = get_absolute_url(response, item.xpath('@href').extract()[0])

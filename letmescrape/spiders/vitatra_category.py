@@ -14,6 +14,10 @@ class VitatraCategorySpider(CategorySpider):
         'http://www.vitatra.com/',
     )
 
+    def start_requests(self):
+        for url in self.start_urls:
+            yield Request(url, cookies={'lang':'KR', 'user_lang':'KR'}, callback=self.parse)
+
     def generate_loader(self, selector, response):
         loader = CategoryLoader(selector=selector, response=response)
         loader.title_out = JoinExcludingEmptyValues(' ')
