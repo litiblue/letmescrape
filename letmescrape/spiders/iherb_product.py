@@ -24,7 +24,7 @@ class IherbProductSpider(ProductSpider):
         'http://www.iherb.com/',
     )
     default_values = {
-        'brand': 'iherb',
+        'brand': None,
         'sub_brand': None,
         'default_color': None,
         'colors': None
@@ -103,6 +103,7 @@ class IherbProductSpider(ProductSpider):
 
         loader.add_value('reviews', reviews)
 
+        loader.add_xpath('brand', '//div[@id="mainContent"]/section[@id="product-summary"]/div[@id="product-specification"]/h2/a/text()')
         loader.add_xpath('title', '//div[@id="mainContent"]/section[@id="product-summary"]/div[@id="product-specification"]/h1/text()')
         loader.add_xpath('description', '//div[@id="mainContent"]/section[@id="product-summary"]/div[@id="product-specification"]/p[contains(@class, "red")]')
         loader.add_xpath('description', '//div[@class="prodOverview-section"]')
