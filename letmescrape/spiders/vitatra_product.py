@@ -19,7 +19,7 @@ class VitatraProductSpider(ProductSpider):
         'http://www.vitatra.com/',
     )
     default_values = {
-        'brand': 'vitatra',
+        'brand': None,
         'sub_brand': None,
         'default_color': None,
         'colors': None
@@ -79,9 +79,14 @@ class VitatraProductSpider(ProductSpider):
         for key, value in values_from_list.iteritems():
             loader.add_value(key, value)
 
+        if response.xpath('//div[@class="sub_detail"]/div[@class="goods_info_img"]/div[@class="goods_info"]/table/tbody[1]/tr[2]/th/text()').extract()[0] == 'Brand' \
+                or response.xpath('//div[@class="sub_detail"]/div[@class="goods_info_img"]/div[@class="goods_info"]/table/tbody[1]/tr[2]/th/text()').extract()[0] == '브랜드':
+            loader.add_xpath('brand', '//div[@class="sub_detail"]/div[@class="goods_info_img"]/div[@class="goods_info"]/table/tbody[1]/tr[2]/td/strong/text()')
+        else:
+            loader.add_value('brand', 'vitatra')
         loader.add_xpath('title', '//div[@class="sub_detail"]/div[@class="goods_info_img"]/div[@class="goods_info"]/div[@class="tit"]/text()')
-        loader.add_xpath('description', '//div[@class="sub_detail"]/div[@class="goods_info_img"]/div[@class="goods_info"]/div[@class="tip"]/div/text()')
-        loader.add_xpath('description', '//div[@class="sub_detail"]/div[@id="overview"]/div[@class="cnts"]//text()')
+        loader.add_xpath('description', '//div[@class="sub_detail"]/div[@class="goods_info_img"]/div[@class="goods_info"]/div[@class="tip"]/div')
+        loader.add_xpath('description', '//div[@class="sub_detail"]/div[@id="overview"]/div[@class="cnts"]')
         loader.add_xpath('original_price', '//div[@class="sub_detail"]/div[@class="goods_info_img"]/div[@class="goods_info"]//span[@class="price"]/text()')
         loader.add_xpath('sale_price', '//div[@class="sub_detail"]/div[@class="goods_info_img"]/div[@class="goods_info"]//strong[@class="sale_price"]/text()')
 
