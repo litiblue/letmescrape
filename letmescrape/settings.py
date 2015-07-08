@@ -23,13 +23,18 @@ ITEM_PIPELINES = {
     'letmescrape.pipelines.LetMeShopApiPipeline': 1000
 }
 
+DOWNLOADER_MIDDLEWARES = {
+    'letmescrape.middlewares.RetryMiddlewareWithIncreasingInterval': 500,
+    'scrapy.contrib.downloadermiddleware.retry.RetryMiddleware': None
+}
+
 
 ########## ScrapyJS CONFIGURATION
 # See : https://github.com/scrapinghub/scrapyjs
 SPLASH_URL = 'http://192.168.59.103:8050'
-DOWNLOADER_MIDDLEWARES = {
+DOWNLOADER_MIDDLEWARES.update({
     'scrapyjs.SplashMiddleware': 725,
-}
+})
 DUPEFILTER_CLASS = 'scrapyjs.SplashAwareDupeFilter'
 HTTPCACHE_STORAGE = 'scrapyjs.SplashAwareFSCacheStorage'
 ########## END ScrapyJS CONFIGURATION
