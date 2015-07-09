@@ -55,7 +55,8 @@ class IherbProductSpider(ProductSpider):
 
     def extract_values_from_list(self, item, response):
         url = get_absolute_url(response, item.xpath('@href').extract()[0])
-        list_images = get_absolute_url(response, item.xpath('img/@src').extract()[0])
+        list_images = item.xpath('img/@src').extract()[0]
+        list_images = re.sub(r'http://(.*).iherb.com/', r'http://images.iherb.com/', list_images)
         product_number = re.search(r'(?!.*\/)(.*?)$', url).group(1)
 
         return {
