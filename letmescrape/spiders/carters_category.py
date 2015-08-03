@@ -49,6 +49,9 @@ class CartersCategorySpider(CategorySpider):
 
                         for leaf_sel in column_sel.xpath('ul[%d]/li[not(contains(@class, "mobilevisible"))]' % i):
                             leaf_loader = self.generate_loader(leaf_sel, response)
+                            if 'oshkosh' in leaf_loader.get_output_value('link').lower():
+                                continue
+
                             tree_dict[category_loader].append(leaf_loader)
 
                             leaf_sel_list.append(leaf_sel)
