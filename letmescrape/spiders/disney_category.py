@@ -55,6 +55,10 @@ class DisneyCategorySpider(CategorySpider):
                     if 'See All' in category_item['title'][:7]:
                         parent_loader_list.append(parent_category_loader)
                         sel_list.append(category_sel)
+                    elif 'Dressing Baby' in category_item['title']:
+                        parent_loader_list.append(category_loader)
+                        sel_list.append(category_sel)
+                        tree[parent_category_loader].append(category_loader)
                     else:
                         tree[parent_category_loader].append(category_loader)
             else:
