@@ -80,7 +80,7 @@ class DisneyCategorySpider(CategorySpider):
 
         def _is_exist(parent_loader, category_loader):
             for child_loader in tree[parent_loader]:
-                if child_loader.load_item()['title'] == category_loader.load_item()['title']:
+                if child_loader.load_item()['link'] == category_loader.load_item()['link']:
                     return True
             return False
 
