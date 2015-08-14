@@ -38,3 +38,13 @@ class ProductReviewLoader(BaseItemLoader):
 
 class CategoryLoader(BaseItemLoader):
     default_item_class = CategoryItem
+
+    def load_item(self):
+        item = super(CategoryLoader, self).load_item()
+        if 'parent_loader' in item:
+            parent_loader = item['parent_loader'][0]
+            item['parent_idx'] = parent_loader.load_item()['idx']
+            item['idx'] = '%s|%s' % (item['parent_idx'], item['title'])
+        else:
+            item['idx'] = item['title']
+        return item

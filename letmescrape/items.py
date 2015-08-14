@@ -52,6 +52,9 @@ class ProductReviewItem(scrapy.Item):
 
 
 class CategoryItem(scrapy.Item):
+    parent_loader = scrapy.Field()
+    idx = CharField()
+    parent_idx = CharField()
     title = CharField(required=True)
     link = UrlField()
     sub_categories = ArrayField(scrapy.Item)

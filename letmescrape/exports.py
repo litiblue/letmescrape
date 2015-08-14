@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from urlparse import urljoin
 
 import requests
@@ -6,7 +8,6 @@ from scrapy.contrib.exporter import BaseItemExporter
 from scrapy.utils.serialize import ScrapyJSONEncoder
 
 from letmescrape.utils import snake_case_to_camel_case
-
 
 class LetMeShopApiExporter(BaseItemExporter):
     api_end_point = ''
@@ -69,13 +70,40 @@ class LetMeShopApiCategoriesExporter(LetMeShopApiExporter):
     def __init__(self, site_id, *args, **kwargs):
         super(LetMeShopApiCategoriesExporter, self).__init__(*args, **kwargs)
         self.api_end_point = 'sites/%s/site_categories/' % site_id
-        self.top_level_categories = []
+        self.items = {}
+        self.tree = defaultdict(list)
+        self.root_idx_list = []
 
     def export_item(self, item):
-        self.top_level_categories.append(item)
+        self.items[item['idx']] = item
+        if 'parent_idx' in item:
+            self.tree[item['parent_idx']].append(item['idx'])
+        else:
+            self.root_idx_list.append(item['idx'])
+
+    def item_from_dfs(self, parent_item_idx):
+        item_list = []
+        for child_item_idx in self.tree[parent_item_idx]:
+            item_list.append(self.item_from_dfs(child_item_idx))
+        if item_list:
+            self.items[parent_item_idx]['sub_categories'] = item_list
+        return self.items[parent_item_idx]
+
+    def clean_items(self):
+        for key, value in self.items.iteritems():
+            if 'parent_loader' in value:
+                del self.items[key]['parent_loader']
+            if 'idx' in value:
+                del self.items[key]['idx']
+            if 'parent_idx' in value:
+                del self.items[key]['parent_idx']
 
     def finish_exporting(self):
-        super(LetMeShopApiCategoriesExporter, self).export_item(self.top_level_categories)
+        self.clean_items()
+        result_list = []
+        for root_idx in self.root_idx_list:
+            result_list.append(self.item_from_dfs(root_idx))
+        super(LetMeShopApiCategoriesExporter, self).export_item(result_list)
 
 
 class LetMeShopApiProductExporter(LetMeShopApiExporter):
