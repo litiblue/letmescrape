@@ -44,7 +44,7 @@ class CategoryLoader(BaseItemLoader):
         if 'parent_loader' in item:
             parent_loader = item['parent_loader'][0]
             item['parent_idx'] = parent_loader.load_item()['idx']
-            item['idx'] = '%s|%s' % (item['parent_idx'], item['title'])
+            item['idx'] = '%s|^|%s' % (item['parent_idx'], item['title'])
         else:
             item['idx'] = item['title']
         return item
