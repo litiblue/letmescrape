@@ -5,7 +5,6 @@ from base import CategorySpider
 from letmescrape.loaders import CategoryLoader
 from letmescrape.processors import JoinExcludingEmptyValues
 
-
 class CartersCategorySpider(CategorySpider):
     name = "carters_category"
     allowed_domains = ["carters.com"]
@@ -40,7 +39,7 @@ class CartersCategorySpider(CategorySpider):
 
                         for leaf_sel in column_sel.xpath('ul[%d]/li[not(contains(@class, "mobilevisible"))]' % i):
                             leaf_loader = self.generate_loader(leaf_sel, response)
-                            if 'oshkosh' in leaf_loader.get_output_value('link').lower():
+                            if 'oshkosh' in leaf_loader.get_output_value('title').lower():
                                 continue
                             leaf_loader.add_value('parent_loader', category_loader)
                             yield leaf_loader.load_item()
