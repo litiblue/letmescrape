@@ -100,9 +100,8 @@ class LetMeShopApiCategoriesExporter(LetMeShopApiExporter):
 
     def finish_exporting(self):
         self.clean_items()
-        result_list = []
-        for root_idx in self.root_idx_list:
-            result_list.append(self.item_from_dfs(root_idx))
+        result_list = [
+            self.item_from_dfs(root_idx) for root_idx in self.root_idx_list]
         super(LetMeShopApiCategoriesExporter, self).export_item(result_list)
 
 
