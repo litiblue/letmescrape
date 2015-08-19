@@ -30,6 +30,7 @@ class GymboreeCategorySpider(CategorySpider):
             link = top_level_sel.xpath('@href').extract()
 
             top_level_category_loader = self._generate_loader(top_level_sel, response, title, link)
+            yield top_level_category_loader.load_item()
 
             request = Request(url=link[0], callback=self.parse_category)
             request.meta['loader'] = top_level_category_loader
@@ -44,7 +45,10 @@ class GymboreeCategorySpider(CategorySpider):
         for top_level_sub_column_sel in response.xpath('//div[@id="left-menu"]/h3[contains(@id,"dept")]/a/b'):
             title = top_level_sub_column_sel.xpath('text()').extract()
             link = None
+
             top_level_sub_column_sel_loader = self._generate_loader(top_level_sub_column_sel, response, title, link)
+            top_level_sub_column_sel_loader.add_value('parent_loader', top_level_category_loader)
+            yield top_level_sub_column_sel_loader.load_item()
 
             sub_category = response.selector.xpath('//div[contains(@id,"left-menu")]/ul[@id="left-menu-ul%d"]/li[node()]/a' % i).extract()
 
@@ -60,8 +64,12 @@ class GymboreeCategorySpider(CategorySpider):
 
                 if len(title) != 0:
                     column_sel_loader = self._generate_loader(column_sel, response, title, link)
+                    column_sel_loader.add_value('parent_loader', top_level_sub_column_sel_loader)
+                    yield column_sel_loader.load_item()
                 elif len(sale_title) != 0:
                     column_sel_loader = self._generate_loader(column_sel, response, sale_title, link)
+                    column_sel_loader.add_value('parent_loader', top_level_sub_column_sel_loader)
+                    yield column_sel_loader.load_item()
 
                 for leaf_sel in response.xpath('//div[@id="left-menu"]/ul[@id="left-menu-ul%d"]/ul[@id="left-submenu-ul%d%d"]/li[node()]/a' % (i, i, j)):
                     title = leaf_sel.xpath('text()').extract()
@@ -70,18 +78,11 @@ class GymboreeCategorySpider(CategorySpider):
 
                     if len(title) != 0:
                         leaf_sel_loader = self._generate_loader(leaf_sel, response, title, link)
+                        leaf_sel_loader.add_value('parent_loader', column_sel_loader)
+                        yield leaf_sel_loader.load_item()
                     elif len(up_title) != 0:
                         leaf_sel_loader = self._generate_loader(leaf_sel, response, up_title, link)
-
-                    column_sel_loader.add_value('sub_categories', leaf_sel_loader.load_item())
-
-                top_level_sub_column_sel_loader.add_value('sub_categories', column_sel_loader.load_item())
+                        leaf_sel_loader.add_value('parent_loader', column_sel_loader)
+                        yield leaf_sel_loader.load_item()
                 j += 1
-
-            top_level_category_loader.add_value('sub_categories', top_level_sub_column_sel_loader.load_item())
             i += 1
-
-
-        yield top_level_category_loader.load_item()
-
-
