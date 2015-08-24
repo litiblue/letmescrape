@@ -31,6 +31,7 @@ class VitatraCategorySpider(CategorySpider):
     def parse(self, response):
         for top_level_sel in response.xpath('//div[@class="category"]/div[@class="category_static"]/ul/li/a'):
             top_level_category_loader = self.generate_loader(top_level_sel, response)
+            yield top_level_category_loader.load_item()
             url = get_absolute_url(response, top_level_sel.xpath('@href').extract()[0])
             request = Request(url, callback=self.parse_sub)
             request.meta['top_level_category_loader'] = top_level_category_loader
@@ -42,6 +43,5 @@ class VitatraCategorySpider(CategorySpider):
 
         for category_sel in response.xpath('//div[@class="lnb"]/div/ul/li/a'):
             category_loader = self.generate_loader(category_sel, response)
-            parent_category_loader.add_value('sub_categories', category_loader.load_item())
-
-        yield top_level_category_loader.load_item()
+            category_loader.add_value('parent_loader', parent_category_loader)
+            yield category_loader.load_item()
