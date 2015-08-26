@@ -5,7 +5,6 @@ from letmescrape.loaders import CategoryLoader
 from letmescrape.processors import JoinExcludingEmptyValues
 from scrapy.http import Request
 
-
 class GymboreeCategorySpider(CategorySpider):
     name = "gymboree_category"
     allowed_domains = ["gymboree.com"]
@@ -34,7 +33,6 @@ class GymboreeCategorySpider(CategorySpider):
 
             request = Request(url=link[0], callback=self.parse_category)
             request.meta['loader'] = top_level_category_loader
-
             yield request
 
 
@@ -59,10 +57,14 @@ class GymboreeCategorySpider(CategorySpider):
             for column_sel in response.xpath('//div[contains(@id,"left-menu")]/ul[@id="left-menu-ul%d"]/li[node()]/a' % i):
                 title = column_sel.xpath('text()').extract()
                 sale_title = column_sel.xpath('b/font/text()').extract()
-
+                bold_title = column_sel.xpath('b/text()').extract()
                 link = column_sel.xpath('@href').extract()
 
-                if len(title) != 0:
+                if len(bold_title) != 0:
+                    column_sel_loader = self._generate_loader(column_sel, response, bold_title, link)
+                    column_sel_loader.add_value('parent_loader', top_level_sub_column_sel_loader)
+                    yield column_sel_loader.load_item()
+                elif len(title) != 0:
                     column_sel_loader = self._generate_loader(column_sel, response, title, link)
                     column_sel_loader.add_value('parent_loader', top_level_sub_column_sel_loader)
                     yield column_sel_loader.load_item()
