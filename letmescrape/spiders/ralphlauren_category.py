@@ -54,6 +54,7 @@ class RalphlaurenCategorySpider(CategorySpider):
 
             if len(exist_category) != 0:
                 top_level_category_loader =_generate_loader(top_level_sel.xpath('a[not(contains(@class,"top-nav last"))]'))
+                yield top_level_category_loader.load_item()
 
             parent_category_loader = top_level_category_loader
 
@@ -62,6 +63,8 @@ class RalphlaurenCategorySpider(CategorySpider):
 
                 if category_candidate:
                     category_loader = _generate_loader(column_sel)
+                    category_loader.add_value('parent_loader', parent_category_loader)
+                    yield category_loader.load_item()
 
                     for leaf_sel in column_sel.xpath('ul[@class="nav-items"]/li'):
 
@@ -70,8 +73,5 @@ class RalphlaurenCategorySpider(CategorySpider):
 
                         if len(exist_leaf_sel_title_text) != 0 or len(exist_sale_category):
                             leaf_loader = _generate_loader(leaf_sel)
-                            category_loader.add_value('sub_categories', leaf_loader.load_item())
-
-                    parent_category_loader.add_value('sub_categories', category_loader.load_item())
-
-            yield top_level_category_loader.load_item()
+                            leaf_loader.add_value('parent_loader', category_loader)
+                            yield leaf_loader.load_item()
