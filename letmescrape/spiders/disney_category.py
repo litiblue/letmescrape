@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-from collections import defaultdict
 from scrapy import Request
 
 from base import CategorySpider
-from letmescrape.utils import get_absolute_url
 from letmescrape.loaders import CategoryLoader
 from letmescrape.processors import JoinExcludingEmptyValues
 
@@ -24,81 +22,47 @@ class DisneyCategorySpider(CategorySpider):
         loader.add_xpath('link', 'a/@href')
         return loader
 
-    def item_from_dfs(self, parent_loader, tree):
-        for child_loader in tree[parent_loader]:
-            child_item = self.item_from_dfs(child_loader, tree)
-            parent_loader.add_value('sub_categories', child_item)
-        return parent_loader.load_item()
-
     def parse(self, response):
+
         def _is_head(selector):
             return selector.xpath('self::node()[@class="flyHead"]')
 
         for top_level_sel in response.css('#mainNav li.navTab > a'):
             top_level_category_loader = self.generate_loader(top_level_sel, response)
             parent_category_loader = top_level_category_loader
-
-            # init
-            tree = defaultdict(list)
-            parent_loader_list = []
-            sel_list = []
+            yield top_level_category_loader.load_item()
 
             for category_sel in top_level_sel.xpath('../section//ul[@class="folColumn"]/li[normalize-space()]'):
                 category_loader = self.generate_loader(category_sel, response)
 
                 if _is_head(category_sel):
                     if parent_category_loader is not top_level_category_loader:
-                        tree[top_level_category_loader].append(parent_category_loader)
+                        parent_category_loader.add_value('parent_loader', top_level_category_loader)
+                        yield parent_category_loader.load_item()
                     parent_category_loader = category_loader
                 else:
-                    category_item = category_loader.load_item()
-                    if 'See All' in category_item['title'][:7]:
-                        parent_loader_list.append(parent_category_loader)
-                        sel_list.append(category_sel)
-                    elif 'Dressing Baby' in category_item['title']:
-                        parent_loader_list.append(category_loader)
-                        sel_list.append(category_sel)
-                        tree[parent_category_loader].append(category_loader)
-                    else:
-                        tree[parent_category_loader].append(category_loader)
+                    category_title = category_loader.get_output_value('title')
+                    category_link = category_loader.get_output_value('link')
+
+                    is_contained = True
+                    if 'See All' in category_title:
+                        is_contained = False
+                        yield Request(category_link, callback=self.parse_sub,
+                                      meta={'parent_loader': parent_category_loader})
+                    elif 'Dressing Baby' in category_title:
+                        yield Request(category_link, callback=self.parse_sub,
+                                      meta={'parent_loader': category_loader})
+
+                    if is_contained:
+                        category_loader.add_value('parent_loader', parent_category_loader)
+                        yield category_loader.load_item()
             else:
                 if parent_category_loader is not top_level_category_loader:
-                    tree[top_level_category_loader].append(parent_category_loader)
-
-            if sel_list:
-                idx = 0
-                url = sel_list[idx].xpath('a/@href').extract()[0]
-                url = get_absolute_url(response, url)
-                yield Request(url, callback=self.parse_sub, dont_filter=True, meta={
-                    'tree': tree, 'sel_list': sel_list, 'parent_loader_list': parent_loader_list,
-                    'idx': idx, 'top_level_category_loader': top_level_category_loader})
-            else:
-                yield self.item_from_dfs(top_level_category_loader, tree)
+                    parent_category_loader.add_value('parent_loader', top_level_category_loader)
+                    yield parent_category_loader.load_item()
 
     def parse_sub(self, response):
-        tree = response.meta['tree']
-        sel_list = response.meta['sel_list']
-        parent_loader_list = response.meta['parent_loader_list']
-        idx = response.meta['idx']
-        top_level_category_loader = response.meta['top_level_category_loader']
-
-        def _is_exist(parent_loader, category_loader):
-            for child_loader in tree[parent_loader]:
-                if child_loader.load_item()['link'] == category_loader.load_item()['link']:
-                    return True
-            return False
-
         for category_sel in response.xpath('//nav[@class="leftNav"]/ul[@class="navList"]/li/a'):
             category_loader = self.generate_loader(category_sel, response)
-            if not _is_exist(parent_loader_list[idx], category_loader):
-                tree[parent_loader_list[idx]].append(category_loader)
-
-        if idx < len(sel_list)-1:
-            idx += 1
-            url = sel_list[idx].xpath('a/@href').extract()[0]
-            url = get_absolute_url(response, url)
-            yield Request(url, callback=self.parse_sub, dont_filter=True, meta={
-                'tree': tree, 'sel_list': sel_list, 'parent_loader_list': parent_loader_list,
-                'idx': idx, 'top_level_category_loader': top_level_category_loader})
-        else:
-            yield self.item_from_dfs(top_level_category_loader, tree)
+            category_loader.add_value('parent_loader', response.meta['parent_loader'])
+            yield category_loader.load_item()
