@@ -5,6 +5,7 @@ from base import CategorySpider
 from letmescrape.loaders import CategoryLoader
 from letmescrape.processors import JoinExcludingEmptyValues
 from letmescrape.utils import get_absolute_url
+from letmescrape.scripts import make_lua_script
 
 
 class GapCategorySpider(CategorySpider):
@@ -19,8 +20,15 @@ class GapCategorySpider(CategorySpider):
         loader.title_out = JoinExcludingEmptyValues(' ')
         loader.add_xpath('title', 'text()')
         loader.add_xpath('title', 'a/text()')
+        loader.add_xpath('title', '@title')
         loader.add_xpath('link', '@href')
         loader.add_xpath('link', 'a/@href')
+
+        url = get_absolute_url(response, '')
+        style_id = selector.xpath('@value').extract()
+        if style_id:
+            loader.add_value('link', '%s#style=%s' % (url, style_id[0]))
+
         return loader
 
     def is_head(self, selector):
@@ -30,27 +38,50 @@ class GapCategorySpider(CategorySpider):
         return selector.xpath('self::node()[contains(@class,"category")]')
 
     def parse(self, response):
-        for top_level_sel in response.xpath('//div[@id="mainNavGOL"]/ul[@class="gpnavigation"]/li[not(@id)]'):
-            top_level_category_loader = self.generate_loader(top_level_sel, response)
-            url = get_absolute_url(response, top_level_sel.xpath('a/@href').extract()[0])
-            request = Request(url, callback=self.parse_sub)
-            request.meta['top_level_category_loader'] = top_level_category_loader
+        for category_sel in response.xpath('//div[@id="mainNavGOL"]/ul[@class="gpnavigation"]/li[not(@id)]'):
+            category_loader = self.generate_loader(category_sel, response)
+            yield category_loader.load_item()
+
+            url = get_absolute_url(response, category_sel.xpath('a/@href').extract()[0])
+            request = Request(url, callback=self.parse_sub, meta={
+                'parent_loader': category_loader
+            })
             yield request
 
     def parse_sub(self, response):
-        top_level_category_loader = response.meta['top_level_category_loader']
-        parent_category_loader = top_level_category_loader
+        parent_loader = response.meta['parent_loader']
 
         for category_sel in response.xpath('//div[@id="sideNavCategories"]/ul[@class="category"]/li'):
             category_loader = self.generate_loader(category_sel, response)
             if self.is_head(category_sel):
-                if parent_category_loader is not top_level_category_loader:
-                        top_level_category_loader.add_value('sub_categories', parent_category_loader.load_item())
-                parent_category_loader = category_loader
+                category_loader.add_value('parent_loader', parent_loader)
+                last_head_loader = category_loader
             elif self.is_category(category_sel):
-                parent_category_loader.add_value('sub_categories', category_loader.load_item())
-        else:
-            if parent_category_loader is not top_level_category_loader:
-                top_level_category_loader.add_value('sub_categories', parent_category_loader.load_item())
+                category_loader.add_value('parent_loader', last_head_loader)
+            yield category_loader.load_item()
 
-        yield top_level_category_loader.load_item()
+            splash_selector_list = ["#sideNavCategories", "#sideNavFacets", ".style-option"]
+            script = make_lua_script(splash_selector_list, '&&')
+
+            urls = category_sel.xpath('a/@href').extract()
+            if not urls:
+                continue
+            url = get_absolute_url(response, urls[0])
+
+            request = Request(url, callback=self.parse_sub_sub, meta={
+                'parent_loader': category_loader,
+                'splash': {
+                    'endpoint': 'execute',
+                    'args': {'lua_source': script}
+                }
+            })
+            yield request
+
+    def parse_sub_sub(self, response):
+        url = get_absolute_url(response, '')
+        parent_loader = response.meta['parent_loader']
+
+        for category_sel in response.xpath('//li[@class="style-option "]/input'):
+            category_loader = self.generate_loader(category_sel, response)
+            category_loader.add_value('parent_loader', parent_loader)
+            yield category_loader.load_item()
