@@ -24,15 +24,15 @@ class GncCategorySpider(CategorySpider):
 
         for top_level_sel in response.xpath('//table[@id="mainNav"]//td[@class="mainNavItem"]'):
             top_level_category_loader = _generate_loader(top_level_sel)
+            yield top_level_category_loader.load_item()
             parent_category_loader = top_level_category_loader
 
             for column_sel in top_level_sel.xpath('div[@class="mainNavSubContainer"]/ul[contains(@class, "mainNavSub")]/li[contains(@class, "subCats")]'):
                 category_loader = _generate_loader(column_sel.xpath('ul/li[@class="title"]'))
+                category_loader.add_value('parent_loader', parent_category_loader)
+                yield category_loader.load_item()
 
                 for leaf_sel in column_sel.xpath('ul/li[contains(@class, "subCat")]'):
                     leaf_loader = _generate_loader(leaf_sel)
-                    category_loader.add_value('sub_categories', leaf_loader.load_item())
-
-                parent_category_loader.add_value('sub_categories', category_loader.load_item())
-
-            yield top_level_category_loader.load_item()
+                    leaf_loader.add_value('parent_loader', category_loader)
+                    yield leaf_loader.load_item()
