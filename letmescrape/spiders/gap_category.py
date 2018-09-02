@@ -7,8 +7,10 @@ from letmescrape.processors import JoinExcludingEmptyValues
 from letmescrape.utils import get_absolute_url
 from letmescrape.scripts import make_lua_script
 
-
 class GapCategorySpider(CategorySpider):
+    custom_settings = {
+        'DOWNLOAD_DELAY': 1
+    }
     name = "gap_category"
     allowed_domains = ["gap.com"]
     start_urls = (
@@ -78,10 +80,25 @@ class GapCategorySpider(CategorySpider):
             yield request
 
     def parse_sub_sub(self, response):
-        url = get_absolute_url(response, '')
         parent_loader = response.meta['parent_loader']
 
-        for category_sel in response.xpath('//li[@class="style-option "]/input'):
-            category_loader = self.generate_loader(category_sel, response)
-            category_loader.add_value('parent_loader', parent_loader)
-            yield category_loader.load_item()
+        if response.xpath('//div[@id="lrCategoryNameHeader"]/text()').extract():
+            for category_sel in response.xpath('//li[@class="style-option "]/input'):
+                category_loader = self.generate_loader(category_sel, response)
+                category_loader.add_value('parent_loader', parent_loader)
+                item = category_loader.load_item()
+                yield item
+
+        else:  # If the result is an error page, request again.
+            splash_selector_list = ["#sideNavCategories", "#sideNavFacets", ".style-option"]
+            script = make_lua_script(splash_selector_list, '&&')
+
+            url = get_absolute_url(response, '')
+            request = Request(url, callback=self.parse_sub_sub, dont_filter=True, meta={
+                'parent_loader': parent_loader,
+                'splash': {
+                    'endpoint': 'execute',
+                    'args': {'lua_source': script}
+                }
+            })
+            yield request
