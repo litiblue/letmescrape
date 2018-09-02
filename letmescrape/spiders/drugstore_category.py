@@ -29,52 +29,23 @@ class DrugstoreCategorySpider(CategorySpider):
                 continue
 
             top_category_loader = self.generate_loader(sel, response)
+            yield top_category_loader.load_item()
             yield Request(url, callback=self.parse_sub, meta={
-                'top_category_loader': top_category_loader})
+                'parent_loader': top_category_loader})
 
     def parse_sub(self, response):
-        lev2_sel_list = []
-        top_category_loader = response.meta['top_category_loader']
-        parent_loader_list = []
-
         for sel in response.xpath('//div[@id="refineBycategory"]/a'):
-            url = get_absolute_url(response, sel.xpath('@href').extract()[0])
-
-            lev2_sel_list.append(sel)
             category_loader = self.generate_loader(sel, response)
-            parent_loader_list.append(category_loader)
+            category_loader.add_value('parent_loader', response.meta['parent_loader'])
+            yield category_loader.load_item()
 
-        # go to the first level2 node
-        idx = 0
-        url = get_absolute_url(
-            response, lev2_sel_list[idx].xpath('@href').extract()[0])
-        yield Request(url, callback=self.parse_sub_sub,
-                      meta={'lev2_sel_list': lev2_sel_list, 'idx': idx,
-                            'top_category_loader': top_category_loader,
-                            'parent_loader_list': parent_loader_list})
+            url = get_absolute_url(response, category_loader.get_output_value('link'))
+            yield Request(url, callback=self.parse_sub_sub, meta={
+                'parent_loader': category_loader
+            })
 
     def parse_sub_sub(self, response):
-        lev2_sel_list = response.meta['lev2_sel_list']
-        top_category_loader = response.meta['top_category_loader']
-        parent_loader_list = response.meta['parent_loader_list']
-        idx = response.meta['idx']
-
         for sel in response.xpath('//div[@id="refineBycategory"]/a'):
             category_loader = self.generate_loader(sel, response)
-            parent_loader_list[idx].add_value('sub_categories',
-                                              category_loader.load_item())
-
-        top_category_loader.add_value('sub_categories',
-                                      parent_loader_list[idx].load_item())
-
-        if idx == len(lev2_sel_list) - 1:
-            yield top_category_loader.load_item()
-        else:
-            # go to the next level2 node
-            idx += 1
-            url = get_absolute_url(
-                response, lev2_sel_list[idx].xpath('@href').extract()[0])
-            yield Request(url, callback=self.parse_sub_sub,
-                          meta={'lev2_sel_list': lev2_sel_list, 'idx': idx,
-                                'top_category_loader': top_category_loader,
-                                'parent_loader_list': parent_loader_list})
+            category_loader.add_value('parent_loader', response.meta['parent_loader'])
+            yield category_loader.load_item()
